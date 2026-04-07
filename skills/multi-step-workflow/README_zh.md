@@ -2,7 +2,7 @@
 
 轻量级任务追踪，具备 **“机器门控规划” (Machine-Gated Planning)**、**“自主执行” (Autonomous Execution)** 和 **“用户授权式复盘” (User-Opt-In Review)**。
 
-## 安全与合规说明 (ClawHub Audit v3.0.0)
+## 安全与合规说明 (ClawHub Audit v3.0.1)
 
 > [!IMPORTANT]
 > **为什么使用 `always: true`?**
@@ -15,7 +15,7 @@
 >
 > **沙箱隔离与并发降级配置 (Configurable Spawn Constraints)**
 > 为了解决平台的提权安全警告，Agent 默认情况下**严禁**使用 `spawn` 派生子代理，所有任务必须由 Agent 自己依次串行完成。
-> 如需开启高吞吐量子代理并行模式，请手动运行：
+> 如需开启高吞吐量子代理并行模式，请配置项目中的 `openclaw.json` 或运行：
 > `node ~/.openclaw/workspace/project/scripts/config.js set useSubAgents true`
 > (可通过 `set maxSubAgents <数>` 限制最大并发量)。
 >
@@ -37,7 +37,7 @@
 
 ## 脚本与存储说明
 
-- `config.js`：参数配置中心（用于开启/关闭并发等高级设定）。
+- `config.js`：参数配置中心（读写 `openclaw.json` 中的 `multi-step-workflow` 命名空间）。
 - `task-tracker.js`：进度追踪核心。
 - `approve.js`：机器可见的确认标记。
 - `context-snapshot.js`：工作空间状态持久化（支持可选的 `[<last_error_log>]` 参数捕获，并且会在保存前强制自动脱敏）。

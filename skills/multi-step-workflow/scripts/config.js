@@ -14,35 +14,41 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { resolve, dirname } from 'path';
 
-const CONFIG_FILE = resolve(process.env.HOME, '.openclaw/workspace/project/workflow.config.json');
+const CONFIG_FILE = resolve(process.env.HOME, '.openclaw/workspace/project/openclaw.json');
+const NAMESPACE = 'multi-step-workflow';
 
 const DEFAULT_CONFIG = {
   useSubAgents: false,
   maxSubAgents: 3
 };
 
-function load() {
-  if (!existsSync(CONFIG_FILE)) return DEFAULT_CONFIG;
+function loadFullConfig() {
+  if (!existsSync(CONFIG_FILE)) return {};
   try {
-    const data = JSON.parse(readFileSync(CONFIG_FILE, 'utf8'));
-    return { ...DEFAULT_CONFIG, ...data };
+    return JSON.parse(readFileSync(CONFIG_FILE, 'utf8'));
   } catch {
-    return DEFAULT_CONFIG;
+    return {};
   }
 }
 
-function save(config) {
+function getSkillConfig() {
+  const data = loadFullConfig();
+  return { ...DEFAULT_CONFIG, ...(data[NAMESPACE] || {}) };
+}
+
+function saveSkillConfig(skillConfig) {
+  const data = loadFullConfig();
+  data[NAMESPACE] = skillConfig;
   mkdirSync(dirname(CONFIG_FILE), { recursive: true });
-  writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
+  writeFileSync(CONFIG_FILE, JSON.stringify(data, null, 2));
 }
 
 const [cmd, key, value] = process.argv.slice(2);
 
 if (cmd === 'get') {
-  console.log(JSON.stringify(load(), null, 2));
+  console.log(JSON.stringify(getSkillConfig(), null, 2));
 } else if (cmd === 'set' && key && value) {
-  const config = load();
-  // Simple type casting based on default values
+  const config = getSkillConfig();
   if (typeof DEFAULT_CONFIG[key] === 'boolean') {
     config[key] = value === 'true';
   } else if (typeof DEFAULT_CONFIG[key] === 'number') {
@@ -50,8 +56,8 @@ if (cmd === 'get') {
   } else {
     config[key] = value;
   }
-  save(config);
-  console.log(JSON.stringify({ ok: true, config }, null, 2));
+  saveSkillConfig(config);
+  console.log(JSON.stringify({ ok: true, config_file: CONFIG_FILE, [NAMESPACE]: config }, null, 2));
 } else {
   console.log('Usage:');
   console.log('  node scripts/config.js get');
