@@ -28,6 +28,30 @@ function save(data) {
   writeFileSync(SNAPSHOT_FILE, JSON.stringify(data, null, 2));
 }
 
+// Simple regex patterns for common PII and secrets
+const rules = [
+  { name: 'Email', regex: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, replacement: '[REDACTED_EMAIL]' },
+  { name: 'IPv4', regex: /\b(?:\d{1,3}\.){3}\d{1,3}\b/g, replacement: '[REDACTED_IP]' },
+  { name: 'Token/Key', regex: /(?:Bearer |Token |key=|password=|secret=)['"]?([a-zA-Z0-9\-_]{16,})['"]?/gi, replacement: '[REDACTED_SECRET]' },
+  { name: 'Phone', regex: /(?:\+\d{1,3}[- ]?)?\(?\d{3}\)?[- ]?\d{3}[- ]?\d{4}\b/g, replacement: '[REDACTED_PHONE]' }
+];
+
+function sanitize(input) {
+  if (!input) return input;
+  let sanitized = input;
+  for (const rule of rules) {
+    sanitized = sanitized.replace(rule.regex, (match) => {
+      if (match.toLowerCase().startsWith('bearer ')) return 'Bearer [REDACTED_SECRET]';
+      if (match.toLowerCase().startsWith('token ')) return 'Token [REDACTED_SECRET]';
+      if (match.toLowerCase().includes('key=')) return match.replace(/key=[^&\s]+/i, 'key=[REDACTED_SECRET]');
+      if (match.toLowerCase().includes('password=')) return match.replace(/password=[^&\s]+/i, 'password=[REDACTED_SECRET]');
+      if (match.toLowerCase().includes('secret=')) return match.replace(/secret=[^&\s]+/i, 'secret=[REDACTED_SECRET]');
+      return rule.replacement;
+    });
+  }
+  return sanitized;
+}
+
 const [cmd, arg1, arg2, arg3, arg4] = process.argv.slice(2);
 
 if (cmd === 'save') {
@@ -36,10 +60,10 @@ if (cmd === 'save') {
     process.exit(1);
   }
   const snapshot = {
-    task: arg1,
-    findings: arg2 || '',
-    pending: arg3 || '',
-    lastError: arg4 || '',
+    task: sanitize(arg1),
+    findings: sanitize(arg2 || ''),
+    pending: sanitize(arg3 || ''),
+    lastError: sanitize(arg4 || ''),
     savedAt: new Date().toISOString(),
     contextAtSave: null, // model fills this in if known
   };

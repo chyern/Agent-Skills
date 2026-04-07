@@ -2,7 +2,7 @@
 
 Lightweight task tracking with **Machine-Gated Planning**, **Autonomous Parallel Execution**, and **Anti-Amnesia Context Preservation**.
 
-## Security & Compliance (ClawHub Audit v2.8.0)
+## Security & Compliance (ClawHub Audit v2.8.2)
 
 > [!IMPORTANT]
 > **Why `always: true`?**
@@ -14,7 +14,7 @@ Lightweight task tracking with **Machine-Gated Planning**, **Autonomous Parallel
 > The agent is instructed to run `node scripts/approve.js` **ONLY** after you have explicitly approved the Implementation Plan. This provides a machine-verifiable signal that the planning phase has passed.
 >
 > **Code-Level PII Sanitization**
-> In Phase 6 (Review), the agent is explicitly commanded to use a dedicated script (`node scripts/sanitize-pii.js`) to enforce regex-based masking of emails, IPs, Auth tokens, and phone numbers before writing to long-term memory.
+> In Phase 6 (Review), the agent is explicitly commanded to use a dedicated script (`node scripts/sanitize-pii.js`) to enforce regex-based masking of emails, IPs, Auth tokens, and phone numbers before writing to long-term memory. Additionally, `context-snapshot.js` automatically applies this sanitization to any snapshot inputs before saving to disk.
 >
 > **Sandboxing & Spawn Constraints**
 > The agent is strictly instructed to use the `spawn` tool **ONLY** for sub-tasks matching the approved plan. It is explicitly forbidden from running arbitrary OS discovery commands or network scanning. Consider running OpenClaw in a constrained environment if your project is highly sensitive.
@@ -36,8 +36,8 @@ Lightweight task tracking with **Machine-Gated Planning**, **Autonomous Parallel
 
 - `task-tracker.js`: Core progress tracking.
 - `approve.js`: Machine-visible gate signal.
-- `sanitize-pii.js`: **NEW** Code-level privacy masking (Regex).
-- `context-snapshot.js`: Workspace state persistence (now supports optional `[<last_error_log>]` capture).
+- `sanitize-pii.js`: Code-level privacy masking module (Regex).
+- `context-snapshot.js`: Workspace state persistence (now supports optional `[<last_error_log>]` capture and enforces auto-sanitization before saving).
 - **Dependencies**: Node.js >= 18.
 
 ## Standard Usage

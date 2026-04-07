@@ -2,7 +2,7 @@
 
 轻量级任务追踪，具备 **“机器门控规划” (Machine-Gated Planning)**、**“自主并行执行” (Autonomous Parallel Execution)** 和 **“防遗忘上下文保护” (Anti-Amnesia Context Preservation)**。
 
-## 安全与合规说明 (ClawHub Audit v2.8.0)
+## 安全与合规说明 (ClawHub Audit v2.8.2)
 
 > [!IMPORTANT]
 > **为什么使用 `always: true`?**
@@ -14,7 +14,7 @@
 > Agent 被要求在您明确批准实施计划后运行 `node scripts/approve.js`。这在执行日志中留下了明确的“机器标记”，标志着从“规划”正式切换到“执行”。
 >
 > **代码级 PII 脱敏 (Enforcement in Code)**
-> 在 Phase 6 (复盘阶段)，Agent 被明确赋予了指令，**必须**使用专用的过滤脚本 (`node scripts/sanitize-pii.js`) 通过正则表达式在代码层面屏蔽邮箱、IP地址、认证令牌和电话号码，随后才能写入长记忆。
+> 在 Phase 6 (复盘阶段)，Agent 被明确赋予了指令，**必须**使用专用的过滤脚本 (`node scripts/sanitize-pii.js`) 通过正则表达式在代码层面屏蔽邮箱、IP地址、认证令牌和电话号码，随后才能写入长记忆。而且，`context-snapshot.js` 目前也在写入任何快照前**自动在内部强制执行同样的脱敏过滤**。
 >
 > **沙箱隔离与 Spawn 约束**
 > Agent 被严厉禁止使用 `spawn` 工具执行随意的 OS 探测或网络扫描。其并发派生能力被**严格限制在已获批计划 (Implementation Plan) 所涵盖的具体文件中**。如果您的项目非常敏感，建议在沙箱环境运行。
@@ -36,8 +36,8 @@
 
 - `task-tracker.js`：进度追踪核心。
 - `approve.js`：机器可见的确认标记。
-- `sanitize-pii.js`：**新增** 代码级正则脱敏工具。
-- `context-snapshot.js`：工作空间状态持久化（现已支持可选的 `[<last_error_log>]` 参数捕获）。
+- `sanitize-pii.js`：代码级隐私屏蔽模块（正则表达式）。
+- `context-snapshot.js`：工作空间状态持久化（支持可选的 `[<last_error_log>]` 参数捕获，并且会在保存前强制自动脱敏）。
 - **依赖说明**：Node.js >= 18。
 
 ## 标准用法

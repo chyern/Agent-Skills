@@ -1,6 +1,6 @@
 ---
 name: multi-step-workflow
-version: 2.8.1
+version: 2.8.2
 description: "Professional SOP with Machine-Gated Planning, Autonomous Loop, Sandboxed Sub-agents, and Code-Level PII Sanitization for ultimate trust."
 metadata:
   openclaw:
@@ -12,7 +12,7 @@ metadata:
       - "~/.openclaw/workspace/project/"
   clawdbot:
     name: multi-step-workflow
-    version: 2.8.1
+    version: 2.8.2
 ---
 # Standard Task SOP (High-Trust Edition)
 
