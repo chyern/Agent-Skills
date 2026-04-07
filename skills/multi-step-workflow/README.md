@@ -1,36 +1,37 @@
 # Multi-Step Workflow (High-Trust SOP)
 
-Lightweight task tracking with **Machine-Gated Planning** and **Autonomous Parallel Execution**. This skill is designed for complex engineering where alignment and speed are both critical.
+Lightweight task tracking with **Machine-Gated Planning**, **Autonomous Parallel Execution**, and **Privacy-Aware Reviews**.
 
-## Security & Compliance (ClawHub Audit v2.6.0)
+## Security & Compliance (ClawHub Audit v2.6.1)
 
 > [!IMPORTANT]
 > **Why `always: true`?**
-> This skill encodes a Standard Operating Procedure (SOP). By setting `always: true`, the agent is constantly aware that for any complex task (>= 3 steps), it *must* follow a structured plan. It is a logic engine, not a background process.
+> This skill provides a Standard Operating Procedure (SOP). By setting `always: true`, the agent is always aware that it *should* follow a structured workflow for any complex task (>= 3 steps). 
+> **To disable global enforcement**: Ask the agent to "Remove 'always: true' from the multi-step-workflow metadata" or manually edit `SKILL.md`.
 >
 > **Machine-Enforceable Gate**
-> To address "human-in-the-loop" concerns, the agent is instructed to run `node scripts/approve.js` **ONLY** after you have explicitly approved the Implementation Plan. This provides a machine-verifiable signal that the planning phase has passed.
+> The agent is instructed to run `node scripts/approve.js` **ONLY** after you have explicitly approved the Implementation Plan. This provides a machine-verifiable signal that the planning phase has passed.
 >
-> **Sub-agent Isolation**
-> The Manager Agent uses `spawn` (max 3 workers). Sub-agents are instructed to follow strict file-level isolation, focusing only on their assigned modules without modifying global state or tracker progress.
+> **Privacy & Sanitization**
+> In Phase 6 (Review), the agent is explicitly commanded to **sanitize PII** (Personally Identifiable Information) and sensitive credentials before writing to long-term memory.
 >
-> **Runtime Requirement**
-> This skill requires **Node.js >= 18**. The `node` binary must be available in the agent's path.
+> **Runtime & Storage**
+> - **Binary**: Requires **Node.js >= 18**.
+> - **Storage**: Technical JSON state is stored in `~/.openclaw/workspace/project/`.
 
 ## Adaptive Workflow Logic
 
-1. **Simple Path (< 3 steps)**: Direct execution. No tracking via scripts.
+1. **Simple Path (< 3 steps)**: Direct execution.
 2. **Standard Path (>= 3 steps)**:
-   - **Step 1: Planning Mode**: Agent drafts a plan. **MUST WAIT for your approval**.
+   - **Step 1: Planning Mode**: Agent drafts a plan. **MUST WAIT for approval**.
    - **Step 2: Gating**: Agent runs `node scripts/approve.js` once you say "OK".
    - **Step 3: Parallel Execution**: The Manager spawns workers and completes the task autonomously.
 
 ## Scripts & Storage
 
 - `task-tracker.js`: Core progress tracking.
-- `approve.js`: **NEW** Machine-visible gate signal.
+- `approve.js`: Machine-visible gate signal.
 - `context-snapshot.js`: Workspace state persistence.
-- **Paths**: Technical JSON stored in `~/.openclaw/workspace/project/`.
 - **Dependencies**: Node.js >= 18.
 
 ## Standard Usage

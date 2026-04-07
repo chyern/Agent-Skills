@@ -1,16 +1,18 @@
 ---
 name: multi-step-workflow
-version: 2.6.0
-description: "Professional SOP with Machine-Gated Planning Mode, Autonomous Loop & Sandboxed Sub-agents. Ensures high-trust alignment and horizontal scaling for complex tasks."
+version: 2.6.1
+description: "Professional SOP with Machine-Gated Planning Mode, Autonomous Loop & Sandboxed Sub-agents. Optimized for high-trust environments."
 metadata:
   openclaw:
     always: true
-    environment:
+    requires:
       bins:
         - node
+    storage:
+      - "~/.openclaw/workspace/project/"
   clawdbot:
     name: multi-step-workflow
-    version: 2.6.0
+    version: 2.6.1
 ---
 # Standard Task SOP (High-Trust Edition)
 
@@ -58,7 +60,9 @@ Summarize your understanding and align on the objective.
 Verify results (tests, results). If a worker fails, go back to Phase 4.
 
 ### Phase 6: Review
-Summarize lessons. **MUST** write to your memory files (e.g., `memory/` or `MEMORY.md`).
+Summarize lessons and outcomes. 
+**PRIVACY:** Ensure all PII (Personally Identifiable Information) and sensitive credentials are **sanitized** (removed or masked) before writing to long-term memory files.
+**MEMORY:** Write the sanitized summary to `memory/YYYY-MM-DD.md` or `MEMORY.md`.
 
 ### Phase 7: Complete
 Task finished. Clean up state if necessary.
