@@ -1,7 +1,7 @@
 ---
 name: multi-step-workflow
-version: 2.7.0
-description: "Professional SOP with Machine-Gated Planning, Autonomous Loop, Sandboxed Sub-agents, and Context Preservation for long-running resilience."
+version: 2.8.0
+description: "Professional SOP with Machine-Gated Planning, Autonomous Loop, Sandboxed Sub-agents, and Code-Level PII Sanitization for ultimate trust."
 metadata:
   openclaw:
     always: true
@@ -12,7 +12,7 @@ metadata:
       - "~/.openclaw/workspace/project/"
   clawdbot:
     name: multi-step-workflow
-    version: 2.7.0
+    version: 2.8.0
 ---
 # Standard Task SOP (High-Trust Edition)
 
@@ -53,7 +53,7 @@ Summarize your understanding and align on the objective.
 > [!TIP]
 > **YOU ARE IN AUTONOMOUS LOOP.**
 > 1. **Manager Role**: Orchestrate execution using the approved plan.
-> 2. **Worker Role (Sub-agents)**: Use `spawn` for independent tasks (max 3). **ISOLATION**: Ensure sub-agents are restricted to their assigned files.
+> 2. **Worker Role (Sub-agents)**: Use `spawn` **ONLY** for tasks matching the approved plan (max 3). **RESTRICTION**: Do NOT use `spawn` for arbitrary OS commands or network scanning. Ensure sub-agents are strictly sandboxed to their assigned files.
 > 3. **Progress**: Mark steps `done`. Report each step and IMMEDIATELY move to the next.
 > 4. **Context Preservation (Anti-Amnesia)**: If you extract a crucial finding (e.g. an obscure API, a workaround) OR if the task is taking many turns and you suspect context compaction is imminent:
 >    `node scripts/context-snapshot.js save "<task>" "<findings>" "<pending>" ["<last_error_log>"]`
@@ -64,8 +64,9 @@ Verify results (tests, results). If a worker fails, go back to Phase 4.
 
 ### Phase 6: Review
 Summarize lessons and outcomes. 
-**PRIVACY:** Ensure all PII (Personally Identifiable Information) and sensitive credentials are **sanitized** (removed or masked) before writing to long-term memory files.
-**MEMORY:** Write the sanitized summary to `memory/YYYY-MM-DD.md` or `MEMORY.md`.
+**PRIVACY (Enforcement in Code):** You MUST sanitize your summary using the provided script before writing it out:
+`node scripts/sanitize-pii.js "<your_summary>"`
+**MEMORY:** Write the resulting sanitized string to `memory/YYYY-MM-DD.md` or `MEMORY.md`.
 
 ### Phase 7: Complete
 Task finished. Clean up state if necessary.

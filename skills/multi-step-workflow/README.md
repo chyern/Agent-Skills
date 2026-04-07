@@ -2,22 +2,26 @@
 
 Lightweight task tracking with **Machine-Gated Planning**, **Autonomous Parallel Execution**, and **Anti-Amnesia Context Preservation**.
 
-## Security & Compliance (ClawHub Audit v2.7.0)
+## Security & Compliance (ClawHub Audit v2.8.0)
 
 > [!IMPORTANT]
 > **Why `always: true`?**
 > This skill provides a Standard Operating Procedure (SOP). By setting `always: true`, the agent is always aware that it *should* follow a structured workflow for any complex task (>= 3 steps). 
-> **To disable global enforcement**: Ask the agent to "Remove 'always: true' from the multi-step-workflow metadata" or manually edit `SKILL.md`.
+> **To disable global enforcement (Opt-out)**: Run the following command in your terminal:
+> `sed -i '' '/always: true/d' ~/.openclaw/workspace/project/SKILL.md` (macOS) or use your system equivalent.
 >
 > **Machine-Enforceable Gate**
 > The agent is instructed to run `node scripts/approve.js` **ONLY** after you have explicitly approved the Implementation Plan. This provides a machine-verifiable signal that the planning phase has passed.
 >
-> **Privacy & Sanitization**
-> In Phase 6 (Review), the agent is explicitly commanded to **sanitize PII** (Personally Identifiable Information) and sensitive credentials before writing to long-term memory.
+> **Code-Level PII Sanitization**
+> In Phase 6 (Review), the agent is explicitly commanded to use a dedicated script (`node scripts/sanitize-pii.js`) to enforce regex-based masking of emails, IPs, Auth tokens, and phone numbers before writing to long-term memory.
+>
+> **Sandboxing & Spawn Constraints**
+> The agent is strictly instructed to use the `spawn` tool **ONLY** for sub-tasks matching the approved plan. It is explicitly forbidden from running arbitrary OS discovery commands or network scanning. Consider running OpenClaw in a constrained environment if your project is highly sensitive.
 >
 > **Runtime & Storage**
 > - **Binary**: Requires **Node.js >= 18**.
-> - **Storage**: Technical JSON state is stored in `~/.openclaw/workspace/project/`.
+> - **Storage**: Technical JSON state (`approvals.json`, `context-snapshot.json`, etc.) is stored in `~/.openclaw/workspace/project/`.
 
 ## Adaptive Workflow Logic
 
@@ -32,6 +36,7 @@ Lightweight task tracking with **Machine-Gated Planning**, **Autonomous Parallel
 
 - `task-tracker.js`: Core progress tracking.
 - `approve.js`: Machine-visible gate signal.
+- `sanitize-pii.js`: **NEW** Code-level privacy masking (Regex).
 - `context-snapshot.js`: Workspace state persistence (now supports optional `[<last_error_log>]` capture).
 - **Dependencies**: Node.js >= 18.
 
