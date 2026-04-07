@@ -29,6 +29,8 @@ function save(data) {
 }
 
 // Simple regex patterns for common PII and secrets
+// NOTE: Regex-based redaction is not a perfect security measure. 
+// It may miss non-standard secret formats. Avoid saving high-value secrets.
 const rules = [
   { name: 'Email', regex: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, replacement: '[REDACTED_EMAIL]' },
   { name: 'IPv4', regex: /\b(?:\d{1,3}\.){3}\d{1,3}\b/g, replacement: '[REDACTED_IP]' },

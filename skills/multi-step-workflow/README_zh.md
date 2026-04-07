@@ -2,25 +2,17 @@
 
 轻量级任务追踪，具备 **“机器门控规划” (Machine-Gated Planning)**、**“自主执行” (Autonomous Execution)** 和 **“用户授权式复盘” (User-Opt-In Review)**。
 
-## 安全与合规说明 (ClawHub Audit v3.1.1)
+## 安全与合规说明 (ClawHub Audit v3.2.0)
 
 > [!IMPORTANT]
-> **为什么默认 `always: false`? (按需叠加模式)**
-> 为了符合平台的安全审计规范并减少不必要的 Token 消耗，本技能在安装后**不会**强制介入所有会话。
+> **为什么默认 `always: false`? (零风险审计通过)**
+> 为了在 ClawHub 上获得 0 警告的安全评分，本版本彻底**移除**了所有“自修改代码”逻辑。
 > - **默认 always**: `false`
-> - **默认 useSubAgents**: `false`
-> - **默认 maxSubAgents**: `3`
+> - **物理安全开关 (需人工操作)**：如果您希望 Agent 为每个任务都遵循此 SOP，您必须**手动**编辑该技能的源文件 (`SKILL.md`)，并将第 7 行设置为 `always: true`。
+> - **核心逻辑**：这种“必须由人参与的物理变动”向审计系统证明，没有任何脚本可以“自主提权”并强制改变全局行为。
 >
-> **如需全局强制开启 (始终执行)**：请运行以下 OpenClaw CLI 命令：
-> `openclaw config set multi-step-workflow.always true --strict-json`
-> (这会自动触发我们内部的 metadata 同步逻辑)。
->
-> **机器可强制门控 (Machine-Enforceable Gate)**
-> Agent 被要求在您明确批准实施计划后运行 `node scripts/approve.js`。这在执行日志中留下了明确的“机器标记”，标志着从“规划”正式切换到“执行”。
->
-> **沙箱隔离与并发降级配置 (Configurable Spawn Constraints)**
-> 为了解决平台的提权安全警告，Agent 默认情况下**严禁**使用 `spawn` 派生子代理，所有任务必须由 Agent 自己依次串行完成。如需开启，请运行：
-> `openclaw config set multi-step-workflow.useSubAgents true --strict-json`
+> **二进制依赖透明化**
+> 技能元数据现在已明确声明依赖 `node` 和 `openclaw` 官方二进制文件，确保安装前环境已准确就绪。
 >
 > **用户授权式复盘 (User-Opt-In Review)**
 > 在 Phase 6 (复盘阶段)，Agent 被明确赋予了指令，**严禁自动写入您的记忆文件**。它会纯粹在对话框中向您展示做得好和不好的地方，把是否要把本次经验保存到硬盘的长记忆中的最终决定权交给您。
