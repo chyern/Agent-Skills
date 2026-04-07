@@ -2,12 +2,14 @@
 
 **Universal agent workflow engine with state machine.** Use for any complex multi-step task: research, debugging, configuration, building, analysis, documentation. Fully self-managing.
 
-## Core Principle: Auto-Pilot (Autonomous Execution)
+## Mode Choice: Adaptive Execution
 
 > [!IMPORTANT]
-> This skill operates in **Auto-Pilot Mode**. The AI proactively initializes the workflow and follows an autonomous loop using the **Internal Compass** (`node scripts/workflow-status.js --auto`).
-> - **Async Notifications**: The AI informs you of progress after each step but does not stop.
-> - **Zero Interruption**: The AI only interrupts for critical authorization or if blocked.
+> This skill supports both **Auto-Pilot** (Autonomous) and **Manual Approval** modes.
+> - **Auto-Pilot**: AI proceeds automatically (Default).
+> - **Manual Approval**: AI waits for your confirmation at every step.
+>
+> Switch mode: `node scripts/set-mode.js <auto|manual>`
 
 ## Architecture
 

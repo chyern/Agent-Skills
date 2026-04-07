@@ -20,7 +20,15 @@ function getStatus(autoMode = false) {
   const states = loadJson(STATE_FILE) || {};
   const activeTasks = Object.values(states);
   
-  if (!autoMode) console.log('=== Multi-Step Workflow Status ===\n');
+  // Load mode config
+  const CONFIG_FILE = join(PROJECT_DIR, 'workflow-config.json');
+  const config = loadJson(CONFIG_FILE) || { auto_pilot: true };
+  const isAutoPilot = config.auto_pilot !== false;
+
+  if (!autoMode) {
+    console.log('=== Multi-Step Workflow Status ===');
+    console.log(`Current Mode: ${isAutoPilot ? 'Auto-Pilot' : 'Manual Approval'}\n`);
+  }
   
   if (activeTasks.length === 0) {
     if (!autoMode) console.log('No active tasks in state machine.');
@@ -73,7 +81,11 @@ function getStatus(autoMode = false) {
         
         if (nextAction) {
           console.log(`NEXT_ACTION: ${nextAction}`);
-          console.log('GUIDE: Follow the NEXT_ACTION above. Notify the user of progress briefly, then IMMEDIATELY proceed.');
+          if (isAutoPilot) {
+            console.log('GUIDE: Mode is Auto-Pilot. Briefly inform user of progress, then IMMEDIATELY PROCEED to next action.');
+          } else {
+            console.log('GUIDE: Mode is Manual Approval. Briefly inform user of progress and WAIT for their confirmation before proceeding.');
+          }
         }
       }
     } else {

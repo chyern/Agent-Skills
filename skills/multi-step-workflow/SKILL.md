@@ -1,25 +1,30 @@
 ---
 name: multi-step-workflow
-version: 1.8.0
-description: "Autonomous agent workflow engine. Proactive, self-managing, and non-blocking."
+version: 1.9.0
+description: "Adaptive autonomous agent workflow engine. Configurable between Auto-Pilot and Manual modes."
 metadata:
   clawdbot:
     name: multi-step-workflow
-    version: 1.8.0
+    version: 1.9.0
     environment:
       bins:
         - node
 ---
-# Agent Workflow (Auto-Pilot Mode)
+# Agent Workflow (Adaptive SOP)
 
-## Proactive Internal Compass (SOP)
+## Proactive Internal Compass
 
 > [!IMPORTANT]
 > **AI MUST follow this autonomous loop for every turn when a task is active:**
-> 1. **Check Status**: Run `node scripts/workflow-status.js --auto` to get the `NEXT_ACTION`.
-> 2. **Notify & Proceed**: Briefly inform the user of the progress (e.g. "Step X done: <what was done>. Moving to step Y..."). 
-> 3. **DO NOT WAIT**: Immediately execute the `NEXT_ACTION` without waiting for user confirmation, unless the state is `BLOCKED`.
-> 4. **Auto-Transition**: Trust the scripts (`task-tracker.js`, `state-machine.js`) to manage state transitions automatically.
+> 1. **Check Status & Mode**: Run `node scripts/workflow-status.js --auto`.
+> 2. **Follow the GUIDE**: 
+>    - If the output says `GUIDE: Mode is Auto-Pilot...`, then briefly inform the user and **IMMEDIATELY PROCEED**.
+>    - If the output says `GUIDE: Mode is Manual Approval...`, then briefly inform the user and **WAIT for confirmation**.
+> 3. **Execute NEXT_ACTION**: Strictly follow the `NEXT_ACTION` command provided by the script.
+
+## Configuration (User Control)
+- Users can switch modes using: `node scripts/set-mode.js <auto|manual>`
+- Default mode is **Auto-Pilot**.
 
 ## Standard Initialization Logic
 > 1. The task involves more than 3 logical steps.
