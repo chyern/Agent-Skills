@@ -8,7 +8,7 @@
  *   node task-tracker.js list
  */
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, chmodSync } from 'fs';
 import { resolve, join } from 'path';
 
 import { getTempDir } from './path-resolver.js';
