@@ -1,122 +1,58 @@
-# Agent Workflow
+# 多步骤工作流
 
-**通用 agent 工作流引擎，基于状态机。** 适用于任何 OpenClaw agent——研究、调试、配置、开发、数据分析、文档编写。自我管理，零配置。
+轻量级 AI Agent 任务追踪工具。将复杂任务拆解为步骤，追踪进度，并在上下文压缩时保留关键发现。
 
-## 模式选择：自适应执行 (Adaptive)
+## 为什么需要
 
-> [!IMPORTANT]
-> 此技能支持 **“全自动驾驶 (Auto-Pilot)”** 与 **“手动审批 (Manual Approval)”** 两种模式。
-> - **全自动驾驶**：AI 会自主连续执行所有步骤（默认）。
-> - **手动审批**：AI 在每个步骤完成后都会停下来等待您的确认。
->
-> 切换模式：`node scripts/set-mode.js <auto|manual>`
+AI Agent 在处理复杂任务时，经常会丢失进度——尤其是上下文被压缩之后。这个 Skill 给 Agent 提供了两个简单的工具来保持条理。
 
-## 架构
+## 脚本
 
-```
-任务接收 → [状态机] → 完成
-                ↑
-          ┌─────┴─────┐
-          │           │
-        脚本         循环
-        推进         下一个
-        task-tracker 步骤
-        state-machine
-        workflow-status (全景视图)
-```
+| 脚本 | 用途 |
+|------|------|
+| `task-tracker.js` | 拆分任务为步骤，标记完成，查看进度 |
+| `context-snapshot.js` | 在上下文压缩前保存关键发现 |
 
-工作流由由多个脚本通过状态机协调驱动。状态机追踪每个任务所处阶段；脚本之间通过文件通信，保持独立可测试。
+## 使用方式
 
-## 设计
-
-### 为什么要状态机？
-
-Agent 经常在任务中途被打断、需要 spawn sub-agent、或中途需要重新规划。状态机让每个阶段都清晰可恢复——如果 agent 在任务中途崩溃，状态已保存，下次会话可以直接恢复。
-
-### 脚本职责
-
-- **task-tracker.js** — 步骤追踪。自动触发状态机流转建议。
-- **state-machine.js** — 生命周期管理。支持 `next` 命令。
-- **context-snapshot.js** — 任务上下文快照，防止 context 压缩导致信息丢失。
-- **workflow-status.js** — 全景视图与**智能建议提供者** (NEXT_ACTION)。
-- **set-mode.js** — 在全自动驾驶和手动审批模式间切换。
-
-### 状态机
-
-```
-IDLE → PLANNING → DELEGATING → EXECUTING → VERIFYING → MEMORYING → DONE
-                            ↓
-                     WAITING_SUBAGENT → EXECUTING
-                            ↓
-                       BLOCKED → EXECUTING (或 DONE)
-```
-
-| 状态 | 进入条件 |
-|------|---------|
-| IDLE | 无活动任务 |
-| PLANNING | 新任务接收，分析范围 |
-| DELEGATING | 计划就绪，判断路由 |
-| EXECUTING | 步骤执行中 |
-| VERIFYING | 验证结果是否符合预期。失败 → 重试 EXECUTING |
-| WAITING_SUBAGENT | sub-agent 已启动，等待结果 |
-| MEMORYING | 所有步骤完成，写入模式 |
-| BLOCKED | 等待用户确认 |
-| DONE | 任务完成 |
-| FAILED | 不可恢复错误，可重试 |
-
-## 脚本 API
-
-#### workflow-status.js (推荐首选)
-
-```bash
-# 获取所有活动任务的状态、进度和详细步骤的全景视图（带智能建议）
-node workflow-status.js [--auto]
-```
-
-#### task-tracker.js
+### 任务追踪
 
 ```bash
 # 创建带步骤的任务
-node task-tracker.js new "<任务>" "<步骤1|步骤2|步骤3>"
+node scripts/task-tracker.js new "重构认证" "分析|设计|实现|测试"
 
-# 标记步骤完成 (如果所有步骤完成，将自动建议切换状态)
-node task-tracker.js done "<任务>" 1
+# 标记步骤 1 完成
+node scripts/task-tracker.js done "重构认证" 1
+
+# 查看所有任务
+node scripts/task-tracker.js list
 ```
 
-#### state-machine.js
+### 上下文快照
 
 ```bash
-# 初始化新任务
-node state-machine.js init "<任务ID>" "<任务名>"
+# 压缩前保存
+node scripts/context-snapshot.js save "重构认证" "发现3个模式" "剩余实现部分"
 
-# 状态转换 (推荐使用 next 命令)
-node state-machine.js next "<任务ID>"
+# 压缩后恢复
+node scripts/context-snapshot.js load
+
+# 清理
+node scripts/context-snapshot.js clear
 ```
 
-#### context-snapshot.js
+## 存储
 
-```bash
-# 保存关键发现，防止 context 压缩
-node context-snapshot.js save "<任务>" "<发现>" "<待决事项>"
-```
+数据存储在 `~/.openclaw/workspace/project/`，首次使用时自动创建。
 
 ## 依赖
 
-- `node` (版本 >= 18)
+- Node.js >= 18
 
-**无需配置**：脚本会自动创建 `~/.openclaw/workspace/project/` 存储目录。
+## 安全
 
-## 外部终点 (External Endpoints)
-
-无。此技能是自包含的，仅在本地文件系统上操作。
-
-## 安全与隐私 (Security & Privacy)
-
-此技能在 `~/.openclaw/workspace/project/` 中存储状态。它绝不会将用户数据或代码传输到任何外部服务器。
-
-## 信任声明 (Trust Statement)
-
-标准的 OpenClaw 技能工作流管理。除非显式作为任务的一部分（例如重构），否则不会对用户源代码执行破坏性操作。
+- 仅本地文件系统操作，无网络请求
+- 除非作为任务的一部分，否则不修改用户源代码
 
 ## License
 
