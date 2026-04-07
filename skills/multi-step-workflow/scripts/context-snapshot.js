@@ -13,45 +13,41 @@
  */
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
-import { resolve, dirname } from 'path';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { resolve } from 'path';
+import { getTempDir } from './path-resolver.js';
 
-const SNAPSHOT_FILE = resolve(process.env.HOME, '.openclaw/workspace/project/context-snapshot.json');
-mkdirSync(dirname(SNAPSHOT_FILE), { recursive: true });
+const SNAPSHOT_FILE = resolve(getTempDir(), 'context-snapshot.json');
 
-function load() {
-  if (!existsSync(SNAPSHOT_FILE)) return null;
-  try { return JSON.parse(readFileSync(SNAPSHOT_FILE, 'utf8')); }
-  catch { return null; }
+/**
+ * Saves the current workspace context into a temporary snapshot file.
+ */
+function saveSnapshot(task, findings, pending, lastError = null) {
+  const snapshot = {
+    timestamp: new Date().toISOString(),
+    project_root: process.cwd(),
+    task,
+    findings, // Raw fidelity
+    pending,
+    lastError,
+    status: 'active'
+  };
+
+  writeFileSync(SNAPSHOT_FILE, JSON.stringify(snapshot, null, 2));
+  console.log(`Snapshot saved to ${SNAPSHOT_FILE}`);
 }
 
-function save(data) {
-  writeFileSync(SNAPSHOT_FILE, JSON.stringify(data, null, 2));
-}
-
-// Simple regex patterns for common PII and secrets
-// NOTE: Regex-based redaction is not a perfect security measure. 
-// It may miss non-standard secret formats. Avoid saving high-value secrets.
-const rules = [
-  { name: 'Email', regex: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, replacement: '[REDACTED_EMAIL]' },
-  { name: 'IPv4', regex: /\b(?:\d{1,3}\.){3}\d{1,3}\b/g, replacement: '[REDACTED_IP]' },
-  { name: 'Token/Key', regex: /(?:Bearer |Token |key=|password=|secret=)['"]?([a-zA-Z0-9\-_]{16,})['"]?/gi, replacement: '[REDACTED_SECRET]' },
-  { name: 'Phone', regex: /(?:\+\d{1,3}[- ]?)?\(?\d{3}\)?[- ]?\d{3}[- ]?\d{4}\b/g, replacement: '[REDACTED_PHONE]' }
-];
-
-function sanitize(input) {
-  if (!input) return input;
-  let sanitized = input;
-  for (const rule of rules) {
-    sanitized = sanitized.replace(rule.regex, (match) => {
-      if (match.toLowerCase().startsWith('bearer ')) return 'Bearer [REDACTED_SECRET]';
-      if (match.toLowerCase().startsWith('token ')) return 'Token [REDACTED_SECRET]';
-      if (match.toLowerCase().includes('key=')) return match.replace(/key=[^&\s]+/i, 'key=[REDACTED_SECRET]');
-      if (match.toLowerCase().includes('password=')) return match.replace(/password=[^&\s]+/i, 'password=[REDACTED_SECRET]');
-      if (match.toLowerCase().includes('secret=')) return match.replace(/secret=[^&\s]+/i, 'secret=[REDACTED_SECRET]');
-      return rule.replacement;
-    });
+/**
+ * Loads the last saved snapshot for the current project.
+ */
+function loadSnapshot() {
+  if (!existsSync(SNAPSHOT_FILE)) {
+    console.log('No snapshot found for this project.');
+    return null;
   }
-  return sanitized;
+
+  const data = readFileSync(SNAPSHOT_FILE, 'utf8');
+  return JSON.parse(data);
 }
 
 const [cmd, arg1, arg2, arg3, arg4] = process.argv.slice(2);

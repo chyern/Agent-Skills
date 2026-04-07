@@ -1,7 +1,7 @@
 ---
 name: multi-step-workflow
-version: 4.1.0
-description: "Professional SOP with Machine-Gated Planning, Native-CLI Configized Sub-agents, and User-Opt-In Memory Review."
+version: 4.3.0
+description: "Professional SOP with Machine-Gated Planning, Native-CLI Config, and Temp-Isolated Sandbox Storage (Zero-Workdir-Clutter)."
 metadata:
   openclaw:
     always: false
@@ -10,10 +10,10 @@ metadata:
         - node
         - openclaw
     storage:
-      - "~/.openclaw/workspace/project/"
+      - "/tmp/openclaw-workflow-*"
   clawdbot:
     name: multi-step-workflow
-    version: 4.1.0
+    version: 4.3.0
 ---
 # Standard Task SOP (High-Trust Edition)
 

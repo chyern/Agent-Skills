@@ -17,10 +17,10 @@ if (args.length === 0) {
 }
 
 const taskName = args[0];
-const workspaceRoot = path.join(process.env.HOME, '.openclaw', 'workspace', 'project');
-const approvalPath = path.join(workspaceRoot, 'approvals.json');
+const approvalPath = path.join(getTempDir(), 'approvals.json');
 
 // Ensure directory exists
+const workspaceRoot = path.dirname(approvalPath);
 if (!fs.existsSync(workspaceRoot)) {
   fs.mkdirSync(workspaceRoot, { recursive: true });
 }

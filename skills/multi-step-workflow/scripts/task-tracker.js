@@ -11,8 +11,12 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'fs';
 import { resolve, join } from 'path';
 
-const TRACKER_DIR = resolve(process.env.HOME, '.openclaw/workspace/project/task-tracker');
-mkdirSync(TRACKER_DIR, { recursive: true });
+import { getTempDir } from './path-resolver.js';
+
+const TRACKER_DIR = join(getTempDir(), 'tasks');
+if (!existsSync(TRACKER_DIR)) {
+  mkdirSync(TRACKER_DIR, { recursive: true });
+}
 
 function taskFile(name) {
   return join(TRACKER_DIR, Buffer.from(name).toString('hex') + '.json');
