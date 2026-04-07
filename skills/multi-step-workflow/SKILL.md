@@ -1,7 +1,7 @@
 ---
 name: multi-step-workflow
-version: 2.9.1
-description: "Professional SOP with Machine-Gated Planning, Autonomous Loop, Sandboxed Sub-agents, and User-Opt-In Memory Review."
+version: 3.0.0
+description: "Professional SOP with Machine-Gated Planning, Configurable Sandboxed Sub-agents, and User-Opt-In Memory Review."
 metadata:
   openclaw:
     always: true
@@ -12,7 +12,7 @@ metadata:
       - "~/.openclaw/workspace/project/"
   clawdbot:
     name: multi-step-workflow
-    version: 2.9.1
+    version: 3.0.0
 ---
 # Standard Task SOP (High-Trust Edition)
 
@@ -49,11 +49,14 @@ Summarize your understanding and align on the objective.
 > 2. **GATING**: Once approved, YOU MUST RUN: `node scripts/approve.js "<task>"`
 > 3. **DO NOT** modify any files until this symbolic gate script is run.
 
-### Phase 4: Execute (Autonomous Parallel Loop)
+### Phase 4: Execute (Autonomous Loop)
 > [!TIP]
 > **YOU ARE IN AUTONOMOUS LOOP.**
-> 1. **Manager Role**: Orchestrate execution using the approved plan.
-> 2. **Worker Role (Sub-agents)**: Use `spawn` **ONLY** for tasks matching the approved plan (max 3). **RESTRICTION**: Do NOT use `spawn` for arbitrary OS commands or network scanning. Ensure sub-agents are strictly sandboxed to their assigned files.
+> 1. **Sequential by Default**: Execute the plan steps sequentially yourself.
+> 2. **Configurable Sub-agents**: BEFORE attempting to parallelize work with sub-agents, you MUST check the configuration: `node scripts/config.js get`.
+>    - If `"useSubAgents": false` (Default), **DO NOT use spawn**.
+>    - If `"useSubAgents": true`, you may use `spawn` strictly for tasks matching the approved plan (limit: `maxSubAgents`).
+>    - **RESTRICTION**: Do NOT use `spawn` for arbitrary OS commands or network scanning.
 > 3. **Progress**: Mark steps `done`. Report each step and IMMEDIATELY move to the next.
 > 4. **Context Preservation (Anti-Amnesia)**: If you extract a crucial finding (e.g. an obscure API, a workaround) OR if the task is taking many turns and you suspect context compaction is imminent:
 >    `node scripts/context-snapshot.js save "<task>" "<findings>" "<pending>" ["<last_error_log>"]`
