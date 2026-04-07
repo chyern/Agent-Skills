@@ -33,14 +33,17 @@
 
 本技能完全通过 OpenClaw 官方 CLI 进行管理。
 
-**开启并发并行**：
-`openclaw config set multi-step-workflow.useSubAgents true --strict-json`
+**初始化配置（首次使用必选）**:
+`openclaw config set skills.entries.multi-step-workflow.config '{"useSubAgents": false, "maxSubAgents": 3, "useSnapshots": false}' --strict-json`
 
-**开启中间态快照 (持久化)**：
-`openclaw config set multi-step-workflow.useSnapshots true --strict-json`
+**启用子代理（并行处理）**:
+`openclaw config set skills.entries.multi-step-workflow.config.useSubAgents true --strict-json`
 
-**查看当前生效配置**：
-`openclaw config get multi-step-workflow`
+**启用任务快照（持久化记忆）**:
+`openclaw config set skills.entries.multi-step-workflow.config.useSnapshots true --strict-json`
+
+**查看当前配置**:
+`openclaw config get skills.entries.multi-step-workflow.config`
 
 ## 核心脚本 (可审计)
 

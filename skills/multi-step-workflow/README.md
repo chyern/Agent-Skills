@@ -31,14 +31,17 @@ Lightweight task tracking with **Machine-Gated Planning**, **Autonomous Executio
 
 ## Configuration
 
+**Initialize Configuration (required for first use)**:
+`openclaw config set skills.entries.multi-step-workflow.config '{"useSubAgents": false, "maxSubAgents": 3, "useSnapshots": false}' --strict-json`
+
 **To enable sub-agents (Parallelism)**:
-`openclaw config set multi-step-workflow.useSubAgents true --strict-json`
+`openclaw config set skills.entries.multi-step-workflow.config.useSubAgents true --strict-json`
 
 **To enable task snapshots (Persistence)**:
-`openclaw config set multi-step-workflow.useSnapshots true --strict-json`
+`openclaw config set skills.entries.multi-step-workflow.config.useSnapshots true --strict-json`
 
 **To see current configuration**:
-`openclaw config get multi-step-workflow`
+`openclaw config get skills.entries.multi-step-workflow.config`
 
 ## Core Scripts (Auditable)
 

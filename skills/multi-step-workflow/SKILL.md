@@ -13,7 +13,7 @@ metadata:
       - "/tmp/openclaw-workflow-* (Mode: 0700)"
   clawdbot:
     name: multi-step-workflow
-    version: 4.4.1
+    version: 4.4.2
 ---
 # Standard Task SOP (High-Trust Edition)
 
@@ -55,15 +55,16 @@ Summarize your understanding and align on the objective.
 > **YOU ARE IN AUTONOMOUS LOOP.**
 > 1. **Sequential by Default**: Execute the plan steps sequentially yourself.
 > 2. **Configurable Sub-agents**: BEFORE parallelizing work:
->    - **Check Configuration**: Run `openclaw config get multi-step-workflow`.
->    - **Modify Configuration** (if needed): Run `openclaw config set multi-step-workflow.<key> <value> --strict-json`.
+>    - **Check Configuration**: Run `openclaw config get skills.entries.multi-step-workflow.config`.
+>    - **Initialization**: If config is empty or errors, run `openclaw config set skills.entries.multi-step-workflow.config '{"useSubAgents": false, "maxSubAgents": 3, "useSnapshots": false}' --strict-json`.
+>    - **Modify Configuration** (if needed): Run `openclaw config set skills.entries.multi-step-workflow.config.<key> <value> --strict-json`.
 >    - **Defaults** (if missing): `useSubAgents: false`, `maxSubAgents: 3`.
 >    - If `useSubAgents` is `false`, **DO NOT use spawn**.
 >    - If `useSubAgents` is `true`, you may use `spawn` (limit: `maxSubAgents`).
 >    - **RESTRICTION**: Do NOT use `spawn` for arbitrary OS commands or network scanning.
 > 3. **Progress**: Mark steps `done`. Report each step and IMMEDIATELY move to the next.
 > 4. **Context Preservation (Anti-Amnesia)**: 
->    - **Check `useSnapshots`**: Run `openclaw config get multi-step-workflow` (Default: `false`).
+>    - **Check `useSnapshots`**: Run `openclaw config get skills.entries.multi-step-workflow.config` (Default: `false`).
 >    - **Execute** (Only if `useSnapshots` is `true`): If you extract a crucial finding OR if the task is taking many turns:
 >      `node scripts/context-snapshot.js save "<task>" "<findings>" "<pending>" ["<last_error_log>"]`
 >    - **Self-Healing**: If you suspect context compaction, run `node scripts/context-snapshot.js load` to recover.
