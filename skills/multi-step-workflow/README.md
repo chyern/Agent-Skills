@@ -1,27 +1,28 @@
-# Multi-Step Workflow (Adaptive SOP)
+# Multi-Step Workflow (Adaptive SOP + Planning Mode)
 
-Lightweight task tracking for AI agents. Break complex tasks into steps, track progress, and preserve context across compaction. This skill uses an **Adaptive Workflow** to handle both simple and complex tasks efficiently.
+Lightweight task tracking for AI agents. This skill enforces a professional **Planning Mode** for complex tasks, ensuring the agent aligns with you before modifying code.
 
 ## Adaptive Workflow Logic
 
-To prevent over-engineering simple tasks, the agent follows a branching logic:
+To keep things fast and focused, the agent branches based on task scale:
 
-1. **Simple Path (< 3 steps)**: For straightforward tasks (reading a single file, explaining code fragment). The agent proceeds directly without formal tracking.
-2. **Standard Path (>= 3 steps)**: For engineering tasks (refactoring, debugging, research, or anything requiring 3 or more steps). The agent follows the full 7-phase SOP and uses `task-tracker.js`.
+1. **Simple Path (< 3 steps)**: For one-off tasks (reading a file, explaining a function). The agent proceeds immediately.
+2. **Standard Path (>= 3 steps)**: For engineering work. The agent enters **Planning Mode** (Phase 2 & 3). It must present a plan and **WAIT for your approval** before writing any code.
 
 ## Why
 
-AI agents often lose track of progress on complex tasks — especially when context gets compacted mid-work. This skill gives the agent two simple tools to stay organized while remaining agile for small requests.
+AI agents can be too eager. Planning Mode forces the agent to "think before doing" and gives you a chance to catch mistakes early. It also keeps progress organized in `task-tracker.js`.
 
 ## Security & ClawHub Notice
 
 > [!IMPORTANT]
 > **Why `always: true`?**
-> This skill provides a Standard Operating Procedure (SOP) for the agent. By setting `always: true`, the agent is always aware that it *should* follow a structured workflow for any complex task. It does not run background processes but remains in the agent's eligible skillset list.
+> This skill provides a Standard Operating Procedure (SOP). By setting `always: true`, the agent is always aware that it *must* plan complex tasks first. It is a logic engine, not a background process.
 >
-> **Data Storage & Path Clarity**
-> - **Operational State**: Scripts (e.g., `task-tracker.js`) save technical JSON data to `~/.openclaw/workspace/project/` for internal engine tracking.
-> - **Session Review**: At the end of a complex task (Standard Path), a human-readable summary is written into `memory/YYYY-MM-DD.md` or `MEMORY.md`. This is skipped for Simple Path tasks.
+> **Data Tracking**
+> - **Operational State**: `task-tracker.js` saves progress to `~/.openclaw/workspace/project/`.
+> - **Memory**: Final reviews are written to your long-term memory (e.g., `memory/` or `MEMORY.md`).
+> - **Plans**: Implementation plans are created as `.md` files in your workspace for transparency.
 
 ## Scripts
 
@@ -30,38 +31,27 @@ AI agents often lose track of progress on complex tasks — especially when cont
 | `task-tracker.js` | Break tasks into steps, mark done, see progress |
 | `context-snapshot.js` | Save findings before context compaction |
 
-## Usage
+## Standard Usage (>= 3 steps)
 
-### Task Tracker (Standard Path)
+1. **Step 1**: Agent analyzes the task and identifies it as "Standard".
+2. **Step 2 (Planning Mode)**: Agent creates steps and an implementation plan. 
+3. **Step 3 (Approval)**: Agent says "I am in Planning Mode" and **STOP**.
+4. **Step 4 (Execution)**: Once you say "OK", the agent proceeds step-by-step.
+
+## Manual Commands (Optional)
 
 ```bash
-# Create a task with steps
-node scripts/task-tracker.js new "refactor auth" "analyze|design|implement|test"
-
-# Mark step 1 done
-node scripts/task-tracker.js done "refactor auth" 1
-
-# See all tasks
+# See all active tasks and steps
 node scripts/task-tracker.js list
+
+# Mark a specific step as done
+node scripts/task-tracker.js done "task name" 1
 ```
 
-### Context Snapshot
+## Storage & Dependencies
 
-```bash
-# Save before compaction
-node scripts/context-snapshot.js save "refactor auth" "found 3 patterns" "implement remaining"
-
-# Restore after compaction
-node scripts/context-snapshot.js load
-```
-
-## Storage
-
-Technical state data stored in `~/.openclaw/workspace/project/`. Auto-created on first use.
-
-## Dependencies
-
-- Node.js >= 18
+- **Storage**: `~/.openclaw/workspace/project/`
+- **Deps**: Node.js >= 18
 
 ## License
 

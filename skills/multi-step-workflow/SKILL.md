@@ -1,67 +1,69 @@
 ---
 name: multi-step-workflow
-version: 2.2.1
-description: "Adaptive SOP for any task. Efficiently handles both simple tasks (less than 3 steps) and complex engineering tasks (3+ steps) via a branching workflow."
+version: 2.3.0
+description: "Adaptive SOP with Planning Mode. Efficiently handles simple tasks (< 3 steps) and complex engineering tasks (>= 3 steps) via a branching workflow (Analyze → Triage → Plan → Approve → Execute)."
 metadata:
   openclaw:
     always: true
   clawdbot:
     name: multi-step-workflow
-    version: 2.2.1
+    version: 2.3.0
     environment:
       bins:
         - node
 ---
-# Standard Task SOP (Adaptive)
+# Standard Task SOP (Adaptive + Planning Mode)
 
-When you receive a task, follow this branching workflow to ensure efficiency and reliability.
+This workflow ensures efficiency for small tasks and reliability for complex engineering work.
 
 ## Phase 0: Triage & Analyze (分析与分流)
-1. **Analyze**: Perform a quick analysis of the task scope within the workspace.
-2. **Threshold Check**: Decide on the execution path:
-   - **Simple Path**: If the task is straightforward (e.g., read 1 file, explain code fragment) and can be completed in **FEWER than 3 steps**.
-   - **Standard Path**: If the task involves research, debugging, multi-file refactoring, or **3 OR MORE steps**.
+1. **Analyze**: Quickly assess the task scope within the workspace.
+2. **Threshold Check**:
+   - **Simple Path**: Straightforward tasks (e.g., read 1 file, explain code) that take **FEWER than 3 steps**.
+   - **Standard Path**: Engineering tasks (e.g., refactoring, debugging, research) requiring **3 OR MORE steps**.
 
 ---
 
 ## [Path A] Simple Path (快速路径)
-1. **Confirm**: Briefly state what you are about to do.
-2. **Execute**: Perform the task directly. No need for `task-tracker`.
-3. **Report**: Deliver the result to the user.
-4. **End**: No formal Review (Phase 6) or Memory file update required.
+1. **Confirm**: State your immediate intent.
+2. **Execute**: Perform the task directly. No `task-tracker` needed.
+3. **Report**: Deliver results. Done.
 
 ---
 
 ## [Path B] Standard Path (标准流程)
-Follow the full structured SOP for complex tasks.
+For complex tasks, you MUST use **Planning Mode** to align with the user before modification.
 
 ### Phase 1: Confirm (核对)
-Summarize your understanding back to the user. Ask clarifying questions. Do NOT proceed until alignment is confirmed.
+Summarize your initial understanding and ask clarifying questions if needed.
 
-### Phase 2: Decompose (拆解)
-Break the task into concrete steps, then register them in the task-tracker:
+### Phase 2: Create Plan (创建计划)
+1. **Decompose**: Break the task into steps and register in `task-tracker`.
+2. **Draft Plan**: Create an `implementation_plan.md` in the workspace (or output it clearly).
+   - **Include**: Core strategy, affected files, and potential risks.
 
 ```bash
-# Internal state is saved to ~/.openclaw/workspace/project/ for engine tracking
 node scripts/task-tracker.js new "<task>" "<step1|step2|step3|...>"
 ```
 
-### Phase 3: Execute (执行)
-Work through steps **one at a time**. For each step:
+### Phase 3: Obtain Approval (获得批准 - Planning Mode)
+> [!IMPORTANT]
+> **YOU ARE NOW IN PLANNING MODE.**
+> 1. Present your plan and steps to the user.
+> 2. **MUST YIELD**: Stop and wait for the user to say "OK", "Approved", or "Go ahead".
+> 3. **DO NOT** perform any destructive or modifying actions until approved.
+
+### Phase 4: Execute (执行)
+Once approved, work through steps **one at a time**.
 1. Execute the current step.
 2. Mark it done: `node scripts/task-tracker.js done "<task>" <step_number>`
-3. Briefly report what was done.
-4. Then proceed to the next step.
+3. Briefly report progress, then move to the next step.
 
-**Do NOT batch multiple steps together. Complete one, report, then move to the next.**
+### Phase 5: Validate (验收)
+Verify results (tests, outputs). If it fails, go back to Phase 4.
 
-### Phase 4: Validate (验收)
-Verify the results match expectations. Run tests, check outputs, and confirm with the user.
-**If validation fails:** Go back to Phase 3 — fix the issues, then re-validate. Do NOT proceed until all checks pass.
+### Phase 6: Review (复盘)
+Summarize lessons and follow-up items. **MUST** write to `memory/YYYY-MM-DD.md` or `MEMORY.md`.
 
-### Phase 5: Review (复盘)
-Briefly summarize: what was done, what was learned, and follow-up items.
-**IMPORTANT:** Write this summary into your workspace memory files (`memory/YYYY-MM-DD.md` or `MEMORY.md`) so the context is preserved across sessions.
-
-### Phase 6: Complete (结束)
-Task is done. Clean up tracker state if needed.
+### Phase 7: Complete (结束)
+Task done. Clean up tracker state.
