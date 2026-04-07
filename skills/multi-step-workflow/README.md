@@ -2,18 +2,24 @@
 
 Lightweight task tracking with **Machine-Gated Planning**, **Autonomous Execution**, and **User-Opt-In Review**.
 
-## Security & Compliance (ClawHub Audit v4.0.0)
+## Security & Transparency (ClawHub Audit v4.1.0)
 
 > [!IMPORTANT]
-> **Zero-Script Configuration (Native-First)**
-> This version has **removed all configuration scripts** to eliminate the security audit surface entirely. 
-> - **Native Config**: The agent interacts directly with OpenClaw's official CLI (`openclaw config`).
-> - **In-Instruction Defaults**: Fallback logic for configuration is handled by the agent's logic, following the strict defaults embedded in the SOP.
-> - **No Shell Injection**: By removing the custom wrapper script, we have completely eliminated the risk of shell or node-based injection from the skill's source.
+> **Native CLI Configuration Architecture (Zero-Config-Script)**
+> This version uses OpenClaw's official CLI (`openclaw config`) for all system settings. We have removed separate configuration scripts to minimize the security surface.
+> - **Native Config**: The agent interacts directly with your global `~/.openclaw/openclaw.json`.
+> - **In-Instruction Defaults**: Fallback logic is handled by the agent's logic based on the SOP.
 
-> [!NOTE]
-> **Global Toggle (Manual-only)**
-> Setting `always: true` in `SKILL.md` remains a **strictly manual** security action. The skill contains no code that can modify its own metadata.
+### 💾 Filesystem Impact & Data Persistence
+To ensure task state persists across turn limits, this skill writes technical JSON files to `~/.openclaw/workspace/project/`:
+- `approvals.json`: Records your explicit approval of a task plan.
+- `context-snapshot.json`: Encrypted/Sanitized task findings to survive context compaction.
+- `*.json` (in tracker dir): Records step-by-step progress for the task.
+
+### 🛡️ Privacy & Security Best Practices
+- **PII Redaction**: `context-snapshot.js` uses regex to mask common PII/secrets. **Warning**: This is not 100% perfect. Avoid task snapshots for projects involving high-value, non-standard plaintext secrets.
+- **Sub-Agent Safety**: By default, `useSubAgents` is `false`. Only enable this via `openclaw config` if you trust the project environment.
+- **Manual Always-On**: Setting `always: true` in `SKILL.md` is a **strictly manual** action for users who want this SOP enforced globally.
 
 ## Adaptive Workflow Logic
 
@@ -26,15 +32,13 @@ Lightweight task tracking with **Machine-Gated Planning**, **Autonomous Executio
 
 ## Configuration
 
-We use OpenClaw's official CLI for all setting management.
-
 **To enable sub-agents (High-Throughput Parallelism)**:
 `openclaw config set multi-step-workflow.useSubAgents true --strict-json`
 
 **To see current configuration**:
 `openclaw config get multi-step-workflow`
 
-## Scripts & Storage
+## Core Scripts (Auditable)
 
 - `task-tracker.js`: Core progress tracking.
 - `approve.js`: Machine-visible gate signal.
