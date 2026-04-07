@@ -1,8 +1,8 @@
 # Multi-Step Workflow (High-Trust SOP)
 
-Lightweight task tracking with **Machine-Gated Planning**, **Autonomous Parallel Execution**, and **Anti-Amnesia Context Preservation**.
+Lightweight task tracking with **Machine-Gated Planning**, **Autonomous Parallel Execution**, and **User-Opt-In Review**.
 
-## Security & Compliance (ClawHub Audit v2.8.2)
+## Security & Compliance (ClawHub Audit v2.9.0)
 
 > [!IMPORTANT]
 > **Why `always: true`?**
@@ -13,8 +13,8 @@ Lightweight task tracking with **Machine-Gated Planning**, **Autonomous Parallel
 > **Machine-Enforceable Gate**
 > The agent is instructed to run `node scripts/approve.js` **ONLY** after you have explicitly approved the Implementation Plan. This provides a machine-verifiable signal that the planning phase has passed.
 >
-> **Code-Level PII Sanitization**
-> In Phase 6 (Review), the agent is explicitly commanded to use a dedicated script (`node scripts/sanitize-pii.js`) to enforce regex-based masking of emails, IPs, Auth tokens, and phone numbers before writing to long-term memory. Additionally, `context-snapshot.js` automatically applies this sanitization to any snapshot inputs before saving to disk.
+> **User-Opt-In Review**
+> In Phase 6 (Review), the agent is explicitly commanded **NOT to auto-write** to your memory files. It will purely display a breakdown of what went well and what didn't in the chat, leaving the final decision of whether to save it to you.
 >
 > **Sandboxing & Spawn Constraints**
 > The agent is strictly instructed to use the `spawn` tool **ONLY** for sub-tasks matching the approved plan. It is explicitly forbidden from running arbitrary OS discovery commands or network scanning. Consider running OpenClaw in a constrained environment if your project is highly sensitive.

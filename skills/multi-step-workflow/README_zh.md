@@ -1,8 +1,8 @@
 # 多步骤工作流 (高信任版 SOP)
 
-轻量级任务追踪，具备 **“机器门控规划” (Machine-Gated Planning)**、**“自主并行执行” (Autonomous Parallel Execution)** 和 **“防遗忘上下文保护” (Anti-Amnesia Context Preservation)**。
+轻量级任务追踪，具备 **“机器门控规划” (Machine-Gated Planning)**、**“自主并行执行” (Autonomous Parallel Execution)** 和 **“用户授权式复盘” (User-Opt-In Review)**。
 
-## 安全与合规说明 (ClawHub Audit v2.8.2)
+## 安全与合规说明 (ClawHub Audit v2.9.0)
 
 > [!IMPORTANT]
 > **为什么使用 `always: true`?**
@@ -13,8 +13,8 @@
 > **机器可强制门控 (Machine-Enforceable Gate)**
 > Agent 被要求在您明确批准实施计划后运行 `node scripts/approve.js`。这在执行日志中留下了明确的“机器标记”，标志着从“规划”正式切换到“执行”。
 >
-> **代码级 PII 脱敏 (Enforcement in Code)**
-> 在 Phase 6 (复盘阶段)，Agent 被明确赋予了指令，**必须**使用专用的过滤脚本 (`node scripts/sanitize-pii.js`) 通过正则表达式在代码层面屏蔽邮箱、IP地址、认证令牌和电话号码，随后才能写入长记忆。而且，`context-snapshot.js` 目前也在写入任何快照前**自动在内部强制执行同样的脱敏过滤**。
+> **用户授权式复盘 (User-Opt-In Review)**
+> 在 Phase 6 (复盘阶段)，Agent 被明确赋予了指令，**严禁自动写入您的记忆文件**。它会纯粹在对话框中向您展示做得好和不好的地方，把是否要把本次经验保存到硬盘的长记忆中的最终决定权交给您。
 >
 > **沙箱隔离与 Spawn 约束**
 > Agent 被严厉禁止使用 `spawn` 工具执行随意的 OS 探测或网络扫描。其并发派生能力被**严格限制在已获批计划 (Implementation Plan) 所涵盖的具体文件中**。如果您的项目非常敏感，建议在沙箱环境运行。
