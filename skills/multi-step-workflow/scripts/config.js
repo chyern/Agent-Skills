@@ -11,33 +11,41 @@
  *   node config.js set maxSubAgents 2
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { resolve, dirname } from 'path';
+import { execSync } from 'child_process';
 
-const CONFIG_FILE = resolve(process.env.HOME, '.openclaw/workspace/project/openclaw.json');
 const SKILL_MD = resolve(dirname(import.meta.url).replace('file://', ''), '../SKILL.md');
 const NAMESPACE = 'multi-step-workflow';
 
 const DEFAULT_CONFIG = {
   useSubAgents: false,
   maxSubAgents: 3,
-  always: false // This reflects the platform force-load state
+  always: false
 };
 
-function loadFullConfig() {
-  if (!existsSync(CONFIG_FILE)) return {};
-  try {
-    return JSON.parse(readFileSync(CONFIG_FILE, 'utf8'));
-  } catch {
-    return {};
-  }
-}
-
 function getSkillConfig() {
-  const data = loadFullConfig();
-  const config = { ...DEFAULT_CONFIG, ...(data[NAMESPACE] || {}) };
-  
-  // Sync the 'always' value from SKILL.md if possible
+  let config = { ...DEFAULT_CONFIG };
+  try {
+    const output = execSync(`openclaw config get ${NAMESPACE}`, { 
+      encoding: 'utf8', 
+      stdio: ['ignore', 'pipe', 'ignore'] 
+    }).trim();
+    
+    if (output && output !== 'undefined' && output !== 'null') {
+      // Some CLIs might return raw value or JSON
+      try {
+        const remote = JSON.parse(output);
+        config = { ...config, ...remote };
+      } catch {
+        // If it's not JSON, it might be a single value, but 'get <namespace>' usually returns object
+      }
+    }
+  } catch (e) {
+    // Key might not exist, defaults are used
+  }
+
+  // Sync the 'always' value from SKILL.md (source of truth for the platform hook)
   if (existsSync(SKILL_MD)) {
     const content = readFileSync(SKILL_MD, 'utf8');
     const match = content.match(/always:\s*(true|false)/);
@@ -48,13 +56,16 @@ function getSkillConfig() {
 }
 
 function saveSkillConfig(skillConfig) {
-  // 1. Save to openclaw.json
-  const data = loadFullConfig();
-  data[NAMESPACE] = { ...skillConfig };
-  delete data[NAMESPACE].always; // Don't redundantly store always in JSON if it's in SKILL.md
-  
-  mkdirSync(dirname(CONFIG_FILE), { recursive: true });
-  writeFileSync(CONFIG_FILE, JSON.stringify(data, null, 2));
+  // 1. Sync values to global openclaw.json via CLI
+  for (const [key, value] of Object.entries(skillConfig)) {
+    try {
+      // We use --strict-json to ensure booleans and numbers are typed correctly
+      const jsonValue = JSON.stringify(value);
+      execSync(`openclaw config set ${NAMESPACE}.${key} '${jsonValue}' --strict-json`, { stdio: 'ignore' });
+    } catch (e) {
+      console.error(`Failed to set ${NAMESPACE}.${key}`);
+    }
+  }
 
   // 2. Cross-file update: modify SKILL.md if 'always' is changed
   if (existsSync(SKILL_MD)) {
@@ -63,7 +74,7 @@ function saveSkillConfig(skillConfig) {
     const updated = content.replace(/(always:\s*)(true|false)/, `$1${newVal}`);
     if (content !== updated) {
       writeFileSync(SKILL_MD, updated);
-      return true; // marked as modified SKILL.md
+      return true; 
     }
   }
   return false;
@@ -75,7 +86,6 @@ if (cmd === 'get') {
   console.log(JSON.stringify(getSkillConfig(), null, 2));
 } else if (cmd === 'set' && key && value) {
   const config = getSkillConfig();
-  const wasAlways = config.always;
   
   if (key === 'always' || typeof DEFAULT_CONFIG[key] === 'boolean') {
     config[key] = value === 'true';
@@ -89,7 +99,7 @@ if (cmd === 'get') {
   
   console.log(JSON.stringify({ 
     ok: true, 
-    config_file: CONFIG_FILE, 
+    source: 'openclaw config cli',
     platform_hook_modified: key === 'always' && skillModified,
     [NAMESPACE]: config 
   }, null, 2));

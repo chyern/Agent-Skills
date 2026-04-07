@@ -2,24 +2,25 @@
 
 轻量级任务追踪，具备 **“机器门控规划” (Machine-Gated Planning)**、**“自主执行” (Autonomous Execution)** 和 **“用户授权式复盘” (User-Opt-In Review)**。
 
-## 安全与合规说明 (ClawHub Audit v3.1.0)
+## 安全与合规说明 (ClawHub Audit v3.1.1)
 
 > [!IMPORTANT]
 > **为什么默认 `always: false`? (按需叠加模式)**
-> 为了符合平台的安全审计规范并减少不必要的 Token 消耗，本技能在安装后**不会**强制介入所有会话。Agent 仅在检测到任务复杂度较高或您明确要求时才会启用本 SOP。
-> **如需全局强制开启 (始终执行)**：请运行以下命令，让 Agent 在执行任何任务时都强制遵循本 SOP：
-> `node ~/.openclaw/workspace/project/scripts/config.js set always true`
-> 如需恢复为按需触发模式，请运行：
-> `node ~/.openclaw/workspace/project/scripts/config.js set always false`
+> 为了符合平台的安全审计规范并减少不必要的 Token 消耗，本技能在安装后**不会**强制介入所有会话。
+> - **默认 always**: `false`
+> - **默认 useSubAgents**: `false`
+> - **默认 maxSubAgents**: `3`
+>
+> **如需全局强制开启 (始终执行)**：请运行以下 OpenClaw CLI 命令：
+> `openclaw config set multi-step-workflow.always true --strict-json`
+> (这会自动触发我们内部的 metadata 同步逻辑)。
 >
 > **机器可强制门控 (Machine-Enforceable Gate)**
 > Agent 被要求在您明确批准实施计划后运行 `node scripts/approve.js`。这在执行日志中留下了明确的“机器标记”，标志着从“规划”正式切换到“执行”。
 >
 > **沙箱隔离与并发降级配置 (Configurable Spawn Constraints)**
-> 为了解决平台的提权安全警告，Agent 默认情况下**严禁**使用 `spawn` 派生子代理，所有任务必须由 Agent 自己依次串行完成。
-> 如需开启高吞吐量子代理并行模式，请配置项目中的 `openclaw.json` 或运行：
-> `node ~/.openclaw/workspace/project/scripts/config.js set useSubAgents true`
-> (可通过 `set maxSubAgents <数>` 限制最大并发量)。
+> 为了解决平台的提权安全警告，Agent 默认情况下**严禁**使用 `spawn` 派生子代理，所有任务必须由 Agent 自己依次串行完成。如需开启，请运行：
+> `openclaw config set multi-step-workflow.useSubAgents true --strict-json`
 >
 > **用户授权式复盘 (User-Opt-In Review)**
 > 在 Phase 6 (复盘阶段)，Agent 被明确赋予了指令，**严禁自动写入您的记忆文件**。它会纯粹在对话框中向您展示做得好和不好的地方，把是否要把本次经验保存到硬盘的长记忆中的最终决定权交给您。
