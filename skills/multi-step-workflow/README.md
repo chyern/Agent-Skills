@@ -1,28 +1,28 @@
-# Multi-Step Workflow (Adaptive SOP + Autonomous Loop)
+# Multi-Step Workflow (Manager-Worker Edition)
 
-Lightweight task tracking for AI agents. This skill enforces a professional **Planning Mode** followed by a high-speed **Autonomous Loop** for complex engineering tasks.
+Lightweight task tracking for AI agents. This skill enforces a professional **Manager-Worker (Parallel)** architecture for complex engineering tasks.
 
 ## Adaptive Workflow Logic
 
 The agent branches based on task complexity to maximize efficiency:
 
-1. **Simple Path (< 3 steps)**: For one-off tasks (reading a file, explaining a function). The agent proceeds immediately.
-2. **Standard Path (>= 3 steps)**: For engineering work. 
-   - **Step 1: Planning Mode**: Agent presents a plan and **MUST WAIT for your approval**.
-   - **Step 2: Autonomous Loop**: Once approved, the agent enters an autonomous execution cycle — it completes a step, reports progress, and **immediately starts the next step** without waiting for you.
+1. **Simple Path (< 3 steps)**: For one-off tasks. The agent proceeds immediately.
+2. **Standard Path (>= 3 steps)**:
+   - **Step 1: Planning Mode**: Agent drafts a plan and identifies tasks that can be parallelized. **MUST WAIT for your approval**.
+   - **Step 2: Parallel Execution**: Once approved, the agent acts as a **Manager**. It uses `spawn` to create up to **3 Sub-agents** simultaneously for independent worker tasks, dramatically increasing throughput.
 
 ## Why
 
-This skill solves the "AI laziness" or "AI interruption" problem. By granting the agent an autonomous loop *after* you've approved the plan, it can finish the entire job in one go while still giving you the chance to vet the strategy beforehand.
+Single-threaded AI task execution is slow for large projects. This skill solves the bottleneck by enabling **Horizontal Scaling**. For example, when adding tests to 5 modules, the Manager-Worker mode can process multiple modules at once.
 
 ## Security & ClawHub Notice
 
 > [!IMPORTANT]
-> **Why `always: true`?**
-> This skill provides a Standard Operating Procedure (SOP). By setting `always: true`, the agent is always aware that it *must* plan complex tasks first.
+> **Manager Role**
+> Only the main Agent maintains the `task-tracker.js` state. Sub-agents (Workers) are lifecycle-short and do NOT have authorization to modify global state.
 >
-> **Autonomous Execution**
-> The "Autonomous Loop" only triggers AFTER you have explicitly approved an implementation plan. You maintain full control over the entry point of the automation.
+> **Concurrency Limit**
+> Standard limit is **3 simultaneous Sub-agents** to prevent API/CPU congestion.
 
 ## Scripts
 
@@ -34,9 +34,9 @@ This skill solves the "AI laziness" or "AI interruption" problem. By granting th
 ## Standard Usage (>= 3 steps)
 
 1. **Analysis**: Agent identifies the task as "Standard".
-2. **Planning**: Agent creates steps and an implementation plan. 
+2. **Planning**: Agent creates steps and identifies parallel workers.
 3. **Approval**: Agent says "I am in Planning Mode" and **STOP**. 
-4. **Autonomous Loop**: You say "OK". The agent then loops through all steps, reporting after each one, until finished.
+4. **Execution**: You say "OK". The Manager spawns workers and orchestrates completion.
 
 ## Manual Commands (Optional)
 

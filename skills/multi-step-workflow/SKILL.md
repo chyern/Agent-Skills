@@ -1,71 +1,63 @@
 ---
 name: multi-step-workflow
-version: 2.4.0
-description: "Adaptive SOP with Planning Mode & Autonomous Loop. Features a triage phase for simple tasks and a structured, self-advancing execution loop for complex engineering tasks."
+version: 2.5.0
+description: "Adaptive SOP with Planning Mode, Autonomous Loop & Sub-agent Parallelism. Features a Manager-Worker architecture to delegate independent tasks to up to 3 sub-agents in parallel."
 metadata:
   openclaw:
     always: true
   clawdbot:
     name: multi-step-workflow
-    version: 2.4.0
+    version: 2.5.0
     environment:
       bins:
         - node
 ---
-# Standard Task SOP (Adaptive + Autonomous Loop)
+# Standard Task SOP (Manager-Worker Edition)
 
-This workflow combines strict user-alignment (Planning Mode) with high-speed automated execution (Autonomous Loop).
+This workflow combines strict alignment (Planning) with high-speed parallel execution (Loop + Sub-agents).
 
 ## Phase 0: Triage & Analyze (分析与分流)
-1. **Analyze**: Quickly assess the task scope within the workspace.
+1. **Analyze**: Assess task scope.
 2. **Threshold Check**:
-   - **Simple Path**: Straightforward tasks (e.g., read 1 file, explain code) that take **FEWER than 3 steps**.
-   - **Standard Path**: Engineering tasks (e.g., refactoring, debugging, research) requiring **3 OR MORE steps**.
+   - **Simple Path**: < 3 steps. Direct execution.
+   - **Standard Path**: >= 3 steps. Follow Path B.
 
 ---
 
 ## [Path A] Simple Path (快速路径)
-1. **Confirm**: State your immediate intent.
-2. **Execute**: Perform the task directly. No `task-tracker` needed.
-3. **Report**: Deliver results. Done.
+1. **Confirm** intent -> **Execute** -> **Report**. Done.
 
 ---
 
 ## [Path B] Standard Path (标准流程)
-For complex tasks, use **Planning Mode** to align and **Autonomous Loop** to execute.
+For complex tasks, act as a **Manager** if multiple independent sub-tasks exist.
 
 ### Phase 1: Confirm (核对)
-Summarize your initial understanding and ask clarifying questions if needed.
+Summarize understanding and ask clarifying questions.
 
-### Phase 2: Create Plan (创建计划)
-1. **Decompose**: Break the task into steps and register in `task-tracker`.
-2. **Draft Plan**: Create an `implementation_plan.md` in the workspace.
-
-```bash
-node scripts/task-tracker.js new "<task>" "<step1|step2|step3|...>"
-```
+### Phase 2: Create Plan (创建与路由)
+1. **Decompose**: Register steps in `task-tracker`.
+2. **Identify Parallelism**: Check for independent sub-tasks (e.g., writing tests for 3 different modules).
+3. **Draft Plan**: Create `implementation_plan.md`. Note which steps will be delegated to Sub-agents.
 
 ### Phase 3: Obtain Approval (获得批准 - Planning Mode)
 > [!IMPORTANT]
-> **YOU ARE NOW IN PLANNING MODE.**
-> 1. Present your plan and steps to the user.
-> 2. **MUST YIELD**: Stop and wait for the user to say "OK", "Approved", or "Go ahead".
-> 3. **DO NOT** perform any modifying actions until approved.
+> **YOU ARE IN PLANNING MODE.**
+> Present plan and parallel execution strategy. **MUST YIELD** and wait for approval.
 
-### Phase 4: Execute (执行 - Autonomous Loop)
+### Phase 4: Execute (并行执行循环)
 > [!TIP]
-> **YOU ARE NOW IN AUTONOMOUS LOOP.**
-> 1. Start with the first step.
-> 2. **Execute** the step.
-> 3. **Mark Done**: `node scripts/task-tracker.js done "<task>" <step_number>`
-> 4. **Brief Report**: Summarize what was completed in this step.
-> 5. **Loop**: **IMMEDIATELY** proceed to the next step. DO NOT wait for user input unless blocked or task finished.
+> **YOU ARE IN AUTONOMOUS LOOP.**
+> 1. **Manager Role**: Orchestrate the execution.
+> 2. **Parallelize**: For independent steps, use `spawn` to create up to **3 Sub-agents** simultaneously.
+> 3. **Worker Role (Sub-agents)**: Sub-agents focus only on execution and reporting back. They do NOT need to run `task-tracker`.
+> 4. **Track & Report**: Mark steps `done` as workers finish. Report progress per step and IMMEDIATELY move to the next.
 
 ### Phase 5: Validate (验收)
-Verify results (tests, outputs). If it fails, go back to Phase 4.
+Verify results (tests, integration). Link all worker outputs.
 
 ### Phase 6: Review (复盘)
-Summarize lessons and follow-up items. **MUST** write to `memory/YYYY-MM-DD.md` or `MEMORY.md`.
+Summarize lessons. **MUST** write to `memory/YYYY-MM-DD.md` or `MEMORY.md`.
 
 ### Phase 7: Complete (结束)
 Task done. Clean up tracker state.
