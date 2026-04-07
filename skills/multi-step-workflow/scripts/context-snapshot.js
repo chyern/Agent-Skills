@@ -12,10 +12,11 @@
  *   node context-snapshot.js clear
  */
 
-import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { resolve } from 'path';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import { resolve, dirname } from 'path';
 
 const SNAPSHOT_FILE = resolve(process.env.HOME, '.openclaw/workspace/project/context-snapshot.json');
+mkdirSync(dirname(SNAPSHOT_FILE), { recursive: true });
 
 function load() {
   if (!existsSync(SNAPSHOT_FILE)) return null;

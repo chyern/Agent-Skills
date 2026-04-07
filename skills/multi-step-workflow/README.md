@@ -1,109 +1,86 @@
 # Agent Workflow
 
-**Universal agent workflow engine with state machine.** Works for any OpenClaw agent — research, debugging, configuration, building, analysis, documentation. Self-managing, zero config.
+**Universal agent workflow engine with state machine.** Use for any complex multi-step task: research, debugging, configuration, building, analysis, documentation. Fully self-managing.
+
+## Core Principle: Proactive Logic
+
+> [!IMPORTANT]
+> This skill is not just a toolbox, but the AI's **Standard Operating Procedure (SOP)**. The AI should **proactively** initialize the state machine and task tracking when identifying complex tasks (steps > 3 or deep research/debugging), without waiting for user guidance.
 
 ## Architecture
 
-Task received → [State Machine] → Done
-                    ↑
-              ┌─────┴─────┐
-              │           │
-         Scripts       Loop
-         delegate    through
-         task-tracker  steps
-         state-machine
+```
+Task Input → [State Machine] → Completion
+                 ↑
+           ┌─────┴─────┐
+           │           │
+        Scripts      Loop
+        delegate    Advance
+        task-tracker Steps
+        state-machine
+        workflow-status (Unified View)
+```
 
-The workflow is driven by three scripts coordinated through a state machine. The state machine tracks which phase each task is in; scripts read/write state to communicate.
+The workflow is driven by multiple scripts coordinated through a state machine. The state machine tracks the stage of each task; scripts communicate via files, maintaining independence and testability.
 
 ## Design
 
-### Why a state machine?
+### Why a State Machine?
 
-Agents often start a task, get interrupted, spawn sub-agents, or need to replan mid-execution. A state machine makes every phase explicit and recoverable — if the agent crashes mid-task, state is preserved and the next session can resume.
+Agents are often interrupted mid-task, need to spawn sub-agents, or re-plan halfway. The state machine makes every stage clear and recoverable—if the agent crashes mid-task, the state is saved, and the next session can resume directly.
 
-### Why separate scripts?
+### Script Responsibilities
 
-- **delegate.js** — context information provider. Model uses this to make its own routing decision.
-- **task-tracker.py** — step tracking. Stores progress in JSON files under `~/.openclaw/workspace/project/task-tracker/`.
-- **state-machine.js** — lifecycle management. Stores task state in `~/.openclaw/workspace/project/state-machine.json`.
-- **context-snapshot.js** — task context preservation before OpenClaw compaction. Saves task-critical info to external JSON file.
-
-Scripts are intentionally stateless between each other — they communicate through files, not function calls. This keeps them independently testable and resilient.
+- **delegate.js** — Context information provider. Helps the model decide if a sub-agent is needed.
+- **task-tracker.js** — Step tracking. Automatically triggers state transition suggestions.
+- **state-machine.js** — Lifecycle management.
+- **context-snapshot.js** — Task context snapshot to prevent information loss from context compaction.
+- **workflow-status.js** — Unified view of workflow status and progress.
 
 ### State Machine
 
+```
 IDLE → PLANNING → DELEGATING → EXECUTING → VERIFYING → MEMORYING → DONE
                             ↓
                      WAITING_SUBAGENT → EXECUTING
                             ↓
-                       BLOCKED → EXECUTING (or DONE)
-
-| State | When entered |
-|-------|-------------|
-| IDLE | No active task |
-| PLANNING | New task received, analyzing scope |
-| DELEGATING | Plan ready, deciding route |
-| EXECUTING | Steps are running |
-| VERIFYING | Verifying results match expectations. Fail → retry EXECUTING |
-| WAITING_SUBAGENT | Sub-agent spawned, waiting |
-| MEMORYING | All steps done, writing patterns |
-| BLOCKED | Waiting for user confirmation |
-| DONE | Task finished |
-| FAILED | Unrecoverable error, can retry |
-
-### Routing (delegate.js — info only, model decides)
-
-delegate.js provides **context information only**. The AI model decides on its own whether to use main session or sub-agent, based on its own judgment of the task's characteristics.
-
-The model receives:
-- Current context percentage and health status
-- Guidance on when to use sub-agent vs main session
-- BLOCK warning when context ≥ 80%
-
-```bash
-node delegate.js <context_pct>
-
-```json
-{
-  "context": 25,
-  "status": "healthy",
-  "recommendation": "Context is healthy. Model can proceed at full speed.",
-  "guidance": { ... }
-}
-
-**Model's routing principle:** Fully independent and parallelizable tasks → sub-agent. Sequential or context-dependent tasks → main session. Networking/realtime tasks → main session only.
-
-### Script API
-
-#### context-snapshot.js
-
-```bash
-# Save task context before compaction
-node context-snapshot.js save "<task>" "<findings>" "<pending>"
-
-# Load saved context (after compaction)
-node context-snapshot.js load
-
-# Clear snapshot when task is done
-node context-snapshot.js clear
+                       BLOCKED → EXECUTING (or DONE if cancelled)
 ```
 
-#### task-tracker.py
+| State | Entrance Condition |
+|-------|---------|
+| IDLE | No active task |
+| PLANNING | New task received, scope analyzed |
+| DELEGATING | Plan ready, routing decided |
+| EXECUTING | Steps in execution |
+| VERIFYING | Results checked against expectations. Fail → retry EXECUTING |
+| WAITING_SUBAGENT | Sub-agent launched, waiting for result |
+| MEMORYING | All steps done, patterns recorded |
+| BLOCKED | Waiting for user confirmation |
+| DONE | Task complete |
+| FAILED | Unrecoverable error, retry possible |
+
+## Script API
+
+#### workflow-status.js (Recommended)
+
+```bash
+# Get a unified view of all active tasks, states, and detailed progress
+node workflow-status.js
+```
+
+#### task-tracker.js
 
 ```bash
 # Create a task with steps
-python3 task-tracker.py new "<task>" "<step1|step2|step3>"
+node task-tracker.js new "<task>" "<step1|step2|step3>"
 
-# Mark a step done
-python3 task-tracker.py done "<task>" 1
+# Mark step as done (automatically suggests transition if all steps are done)
+node task-tracker.js done "<task>" 1
 
-# List all tasks
-python3 task-tracker.py list
-
-# Delete a task
-python3 task-tracker.py clear "<task>"
-
-All data stored in `~/.openclaw/workspace/project/task-tracker/` as JSON files.
+# List all task progress
+node task-tracker.js list
+```
 
 #### state-machine.js
 
@@ -111,37 +88,22 @@ All data stored in `~/.openclaw/workspace/project/task-tracker/` as JSON files.
 # Initialize a new task
 node state-machine.js init "<task_id>" "<task_name>"
 
-# Get current state
-node state-machine.js get "<task_id>"
+# Transition state
+node state-machine.js transition "<task_id>" PLANNING EXECUTING
+```
 
-# Transition to new state
-node state-machine.js transition "<task_id>" PLANNING
+#### context-snapshot.js
 
-# List all active tasks
-node state-machine.js list
+```bash
+# Save key findings before context compaction
+node context-snapshot.js save "<task>" "<findings>" "<pending>"
+```
 
-# Delete a task
-node state-machine.js delete "<task_id>"
+## Dependencies
 
-State stored in `~/.openclaw/workspace/project/state-machine.json`. Invalid transitions are rejected — this is intentional enforcement of the state machine contract.
+- `node` (version >= 18)
 
-## Requirements
-
-- `node` (for delegate.js and state-machine.js)
-- `python3` (for task-tracker.py)
-
-No other dependencies. No environment variables required.
-
-## Extending
-
-To add a new state, modify `state-machine.js`:
-1. Add the state to the `S` constant
-2. Add allowed transitions in the `TRANSITIONS` map
-
-
-## Philosophy
-
-**Scaffolding should thin as the model strengthens.** Store only what can't be re-derived. Keep the framework light.
+**Zero-config**: Scripts automatically create the `~/.openclaw/workspace/project/` storage directory.
 
 ## License
 

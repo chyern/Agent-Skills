@@ -6,10 +6,11 @@
  * IDLE → PLANNING → DELEGATING → EXECUTING → VERIFYING → MEMORYING → DONE
  */
 
-import { readFileSync, writeFileSync } from 'fs';
-import { resolve } from 'path';
+import { readFileSync, writeFileSync, mkdirSync } from 'fs';
+import { resolve, dirname } from 'path';
 
 const STATE_FILE = resolve(process.env.HOME, '.openclaw/workspace/project/state-machine.json');
+mkdirSync(dirname(STATE_FILE), { recursive: true });
 
 // States
 const S = {

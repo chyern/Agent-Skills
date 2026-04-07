@@ -5,12 +5,24 @@ metadata:
   {
     "openclaw": {
       "emoji": "⚙️",
-      "requires": { "bins": ["node", "python3"] },
+      "requires": { "bins": ["node"] },
     },
   }
 ---
 
 # Agent Workflow
+
+## Mandatory Trigger Rules
+
+> [!IMPORTANT]
+> **AI MUST proactively initialize the workflow in the following cases:**
+> 1. The task involves more than 3 logical steps.
+> 2. The task falls under "Research, Deep Debugging, or Complex System Configuration".
+> 3. The task involves large-scale modifications across multiple files.
+> 
+> **Standard Initialization Procedure:**
+> - Immediately run `node scripts/state-machine.js init "<task_id>" "<task_name>"`.
+> - Immediately run `node scripts/task-tracker.js new "<task_name>" "<step1|step2|...>"`.
 
 ## State Machine
 
@@ -63,9 +75,9 @@ Saves task-critical info to external file before OpenClaw auto-compacts context.
 
 ```bash
 SKILL_DIR="$(npm root -g)/openclaw/skills/multi-step-workflow"
-python3 "$SKILL_DIR/scripts/task-tracker.py" new "<task>" "<step1|step2|step3>"
-python3 "$SKILL_DIR/scripts/task-tracker.py" done "<task>" 1
-python3 "$SKILL_DIR/scripts/task-tracker.py" list
+node "$SKILL_DIR/scripts/task-tracker.js" new "<task>" "<step1|step2|step3>"
+node "$SKILL_DIR/scripts/task-tracker.js" done "<task>" 1
+node "$SKILL_DIR/scripts/task-tracker.js" list
 ```
 
 ### state-machine — workflow state manager
