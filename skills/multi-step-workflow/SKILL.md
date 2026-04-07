@@ -45,6 +45,8 @@ node scripts/context-snapshot.js save "<task>" "<findings>" "<pending>"
 ## Phase 5: Validate (验收)
 Verify the results match expectations. Run tests, check outputs, confirm with user.
 
+**If validation fails:** Go back to Phase 4 — fix the issues, then re-validate. Repeat until all checks pass. Do NOT proceed to Phase 6 with known failures.
+
 ## Phase 6: Review (复盘)
 Briefly summarize: what was done, what was learned, any follow-up items.
 
