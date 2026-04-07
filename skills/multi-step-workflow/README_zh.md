@@ -2,24 +2,18 @@
 
 轻量级任务追踪，具备 **“机器门控规划” (Machine-Gated Planning)**、**“自主执行” (Autonomous Execution)** 和 **“用户授权式复盘” (User-Opt-In Review)**。
 
-## 安全与合规说明 (ClawHub Audit v3.2.0)
+## 安全与合规说明 (ClawHub Audit v3.2.1)
 
 > [!IMPORTANT]
-> **为什么默认 `always: false`? (零风险审计通过)**
-> 为了在 ClawHub 上获得 0 警告的安全评分，本版本彻底**移除**了所有“自修改代码”逻辑。
-> - **默认 always**: `false`
-> - **物理安全开关 (需人工操作)**：如果您希望 Agent 为每个任务都遵循此 SOP，您必须**手动**编辑该技能的源文件 (`SKILL.md`)，并将第 7 行设置为 `always: true`。
-> - **核心逻辑**：这种“必须由人参与的物理变动”向审计系统证明，没有任何脚本可以“自主提权”并强制改变全局行为。
->
-> **二进制依赖透明化**
-> 技能元数据现在已明确声明依赖 `node` 和 `openclaw` 官方二进制文件，确保安装前环境已准确就绪。
->
-> **用户授权式复盘 (User-Opt-In Review)**
-> 在 Phase 6 (复盘阶段)，Agent 被明确赋予了指令，**严禁自动写入您的记忆文件**。它会纯粹在对话框中向您展示做得好和不好的地方，把是否要把本次经验保存到硬盘的长记忆中的最终决定权交给您。
->
-> **运行环境与存储**
-> - **运行环境**：需要 **Node.js >= 18**。
-> - **存储路径**：技术状态（如 `approvals.json`, `context-snapshot.json` 等）存储在 `~/.openclaw/workspace/project/`。
+> **零 Shell 执行 (Zero-Shell Execution)**
+> 为了符合平台的顶级安全审计，本技能的所有代码 **不再执行任何 Shell 命令**。
+> - **读取 (仅限 fs)**：配置通过 Node.js 原生 `fs` 模块直接从 `~/.openclaw/openclaw.json` 读取，不涉及 `child_process`。
+> - **写入 (仅限系统)**：Skill 脚本**无法**修改系统配置。如需更改设置，您或 Agent 必须直接使用官方 `openclaw` CLI。
+> - **核心逻辑**：这种“读写分离”架构彻底消除了技能脚本“自主提权”并执行恶意二进制文件的可能性。
+
+> [!NOTE]
+> **物理安全开关 (需人工操作)**
+> 在 `SKILL.md` 中设置 `always: true` 的行为是**严格的人工手动操作**。技能代码在物理上不具备修改此文件的权限。
 
 ## 自适应工作流逻辑
 
@@ -27,24 +21,32 @@
 2. **标准路径 (>= 3 步)**：
    - **第一步：规划模式**：Agent 拟定计划。**必须停止以等待您的批准**。
    - **第二步：门控跳转**：一旦您说“OK”，Agent 运行 `node scripts/approve.js` 以标记进入执行阶段。
-   - **第三步：自主执行**：Agent 自动执行所有任务（默认串行执行。若配置文件中 `useSubAgents` 开启，则调度子代理并行完成）。
-   - **第四步：防遗忘机制**：对于耗时极长的任务，Agent 会主动捕获带有报错信息的快照 (`context-snapshot.js`)，以抵抗底层平台的会话压缩。
+   - **第三步：自主执行**：Agent 自动执行所有计划任务。
+   - **第四步：防遗忘机制**：对于耗时极长的任务，Agent 会通过快照进行状态持久化。
+
+## 配置管理
+
+如需开启高吞吐量子代理并行模式，请执行系统命令：
+`openclaw config set multi-step-workflow.useSubAgents true --strict-json`
+
+如需安全地查看当前生效配置：
+`node scripts/config.js get` （只读模式，无 Shell 派生）
 
 ## 脚本与存储说明
 
-- `config.js`：参数配置中心（读写 `openclaw.json` 中的 `multi-step-workflow` 命名空间）。
+- `config.js`：只读配置查询器。
 - `task-tracker.js`：进度追踪核心。
 - `approve.js`：机器可见的确认标记。
-- `context-snapshot.js`：工作空间状态持久化（支持可选的 `[<last_error_log>]` 参数捕获，并且会在保存前强制自动脱敏）。
-- **依赖说明**：Node.js >= 18。
+- `context-snapshot.js`：状态快照（具备 PII 自动脱敏）。
+- **依赖说明**：Node.js >= 18, OpenClaw CLI。
 
 ## 标准用法
 
-1. **判定**：Agent 识别任务复杂度。
-2. **规划**：Agent 创建步骤和实施计划。
-3. **审批**：Agent 进入“规划模式”并**停止 (STOP)**。
-4. **执行**：一旦您说“OK”，Agent 运行 **approve.js** 后开启自主循环。
-5. **恢复**：如果 Agent 在执行中途因为底层会话截断而突然“失忆”，它会自主读取快照恢复认知。
+1. **分析阶段**：Agent 识别任务复杂度。
+2. **规划阶段**：Agent 提出详细的步骤和实施方案。
+3. **审批阶段**：Agent 表示“已进入规划模式”并**停下来**。
+4. **执行阶段**：您说“OK”。Agent 运行 **approve.js** 并开始自主循环。
+5. **恢复阶段**：如果 Agent 中途由于会话限制遗忘了任务，它会自动加载快照。
 
 ## 许可证
 

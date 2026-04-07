@@ -1,7 +1,7 @@
 ---
 name: multi-step-workflow
-version: 3.2.0
-description: "Professional SOP with Machine-Gated Planning, Configurable Sandboxed Sub-agents (via openclaw config), and User-Opt-In Memory Review."
+version: 3.2.1
+description: "Professional SOP with Machine-Gated Planning, Sandbox-Compliant Config (Zero-Shell), and User-Opt-In Memory Review."
 metadata:
   openclaw:
     always: false
@@ -13,7 +13,7 @@ metadata:
       - "~/.openclaw/workspace/project/"
   clawdbot:
     name: multi-step-workflow
-    version: 3.2.0
+    version: 3.2.1
 ---
 # Standard Task SOP (High-Trust Edition)
 
@@ -54,9 +54,11 @@ Summarize your understanding and align on the objective.
 > [!TIP]
 > **YOU ARE IN AUTONOMOUS LOOP.**
 > 1. **Sequential by Default**: Execute the plan steps sequentially yourself.
-> 2. **Configurable Sub-agents**: BEFORE attempting to parallelize work with sub-agents, you MUST check the system configuration: `openclaw config get multi-step-workflow` (or use `node scripts/config.js get`).
+> 2. **Configurable Sub-agents**: BEFORE parallelizing work:
+>    - **Check Configuration**: Run `node scripts/config.js get`.
+>    - **Modify Configuration** (if needed): Run `openclaw config set multi-step-workflow.<key> <value> --strict-json`.
 >    - If `"useSubAgents": false` (Default), **DO NOT use spawn**.
->    - If `"useSubAgents": true`, you may use `spawn` strictly for tasks matching the approved plan (limit: `maxSubAgents`).
+>    - If `"useSubAgents": true`, you may use `spawn` (limit: `maxSubAgents`).
 >    - **RESTRICTION**: Do NOT use `spawn` for arbitrary OS commands or network scanning.
 > 3. **Progress**: Mark steps `done`. Report each step and IMMEDIATELY move to the next.
 > 4. **Context Preservation (Anti-Amnesia)**: If you extract a crucial finding (e.g. an obscure API, a workaround) OR if the task is taking many turns and you suspect context compaction is imminent:
