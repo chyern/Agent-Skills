@@ -15,7 +15,7 @@ const isLinuxWayland = platform === 'linux' && process.env.XDG_SESSION_TYPE === 
  * Native Clipboard Whitelist (No third-party dependency).
  */
 const ALLOWED_BINS = [
-    'bw', 'pbcopy', 'clip', 'xclip', 'wl-copy', 'node'
+    'bw', 'pbcopy', 'clip', 'xclip', 'wl-copy'
 ];
 
 /**
