@@ -1,6 +1,6 @@
 ---
 name: safe-bitwarden-cli
-version: 1.0.2
+version: 1.0.3
 description: "A secure, conversational bridge to Bitwarden Vault using OS clipboard proxy. Zero AI password visibility."
 metadata:
   always: false
