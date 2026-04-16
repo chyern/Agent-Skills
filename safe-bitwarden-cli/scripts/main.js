@@ -7,12 +7,37 @@ const os = require('os');
  * ENVIRONMENT DETECTOR
  */
 const platform = os.platform(); // 'darwin', 'linux', 'win32'
+const isLinuxX11 = platform === 'linux' && process.env.XDG_SESSION_TYPE === 'x11';
+const isLinuxWayland = platform === 'linux' && process.env.XDG_SESSION_TYPE === 'wayland';
 
 /**
  * COMPLIANCE SECURITY LAYER
- * Explicit hardcoded commands to satisfy static analysis.
+ * Native Clipboard Whitelist (No third-party dependency).
  */
+const ALLOWED_BINS = [
+    'bw', 'pbcopy', 'clip', 'xclip', 'wl-copy', 'node'
+];
 
+/**
+ * NATIVE CLIPBOARD RESOLVER
+ * Returns the correct clipboard binary based on OS/Session.
+ */
+function getNativeClipper() {
+    if (platform === 'darwin') return 'pbcopy';
+    if (platform === 'win32') return 'clip';
+    if (isLinuxWayland) return 'wl-copy';
+    if (platform === 'linux') return 'xclip';
+    return null;
+}
+
+function getClipperArgs(clipper) {
+    if (clipper === 'xclip') return ['-selection', 'clipboard'];
+    return [];
+}
+
+/**
+ * HARDCODED COMMAND WRAPPERS
+ */
 function execBw(args, returnStdout = false) {
     try {
         const res = spawnSync('bw', args, {
@@ -29,25 +54,21 @@ function execBw(args, returnStdout = false) {
     }
 }
 
-function execCopyQ(args, returnStdout = false) {
+function execNativeCheck(bin) {
+    if (!ALLOWED_BINS.includes(bin)) return { success: false };
     try {
-        const res = spawnSync('copyq', args, {
-            stdio: returnStdout ? ['ignore', 'pipe', 'pipe'] : 'ignore',
-            encoding: 'utf8',
-            shell: false
-        });
-        return { 
-            success: res.status === 0, 
-            output: res.status === 0 ? (res.stdout ? res.stdout.trim() : null) : (res.stderr ? res.stderr.trim() : `Exit code ${res.status}`)
-        };
+        // Most clippers don't have --version or it's inconsistent, we just check if exists.
+        const res = spawnSync(bin, ['--help'], { stdio: 'ignore', shell: false });
+        return { success: res.status !== null };
     } catch (err) {
-        return { success: false, output: err.message };
+        return { success: false };
     }
 }
 
 function checkDependencies() {
     const bwCheck = execBw(['--version'], true);
-    const copyqCheck = execCopyQ(['--version'], true);
+    const clipper = getNativeClipper();
+    const clipCheck = clipper ? execNativeCheck(clipper) : { success: false };
     
     let bwStatus = 'unknown';
     if (bwCheck.success) {
@@ -63,7 +84,8 @@ function checkDependencies() {
 
     return {
         bwInstalled: bwCheck.success,
-        copyqInstalled: copyqCheck.success,
+        nativeClipperInstalled: clipCheck.success,
+        clipperType: clipper,
         bwStatus: bwStatus
     };
 }
@@ -101,13 +123,15 @@ function handleSetup() {
     const deps = checkDependencies();
     console.log(JSON.stringify(deps, null, 2));
 
-    if (!deps.bwInstalled || !deps.copyqInstalled) {
-        console.log(`\n[ActionRequired] Missing dependencies. Please install 'bitwarden-cli' and 'copyq' on your system.`);
+    if (!deps.bwInstalled) {
+        console.log(`\n[ActionRequired] Missing 'bitwarden-cli'. Please install 'bw' on your system.`);
+    } else if (!deps.nativeClipperInstalled && deps.clipperType) {
+        console.log(`\n[ActionRequired] Missing native clipper: ${deps.clipperType}. Please install it.`);
     } else if (deps.bwStatus === 'locked' || deps.bwStatus === 'unauthenticated') {
         console.log('\n[ActionRequired] BW is locked or unauthenticated. Please run:');
         console.log('export BW_SESSION=$(bw unlock --raw)');
     } else {
-        console.log("\n[Success] Environment is ready!");
+        console.log("\n[Success] Environment is ready! (Using Native Clipboard)");
     }
 }
 
@@ -137,8 +161,7 @@ function handleSearch(query) {
 }
 
 /**
- * SAFE PIPED COPY
- * (TTL auto-clear removed per User request and Registry Audit feedback)
+ * SAFE NATIVE PIPED COPY
  */
 function handleCopy(id) {
     if (!id) {
@@ -146,26 +169,34 @@ function handleCopy(id) {
         process.exit(1);
     }
 
-    console.log(`[Info] Initiating direct pipe transmission for ID: ${id}`);
+    const clipper = getNativeClipper();
+    if (!clipper) {
+        console.error('[Error] OS/Session not supported for native clipboard.');
+        process.exit(1);
+    }
+
+    const clipperArgs = getClipperArgs(clipper);
+
+    console.log(`[Info] Initiating direct native pipe transmission for ID: ${id}`);
     
     const procBw = spawn('bw', ['get', 'password', id], { shell: false });
-    const procCopyq = spawn('copyq', ['copy', '-'], { shell: false });
+    const procClip = spawn(clipper, clipperArgs, { shell: false });
 
-    procBw.stdout.pipe(procCopyq.stdin);
+    procBw.stdout.pipe(procClip.stdin);
 
     procBw.on('close', (code) => {
         if (code !== 0) {
             console.error(`[Error] bw failed with code ${code}`);
             process.exit(1);
         }
-        procCopyq.stdin.end();
+        procClip.stdin.end();
     });
 
-    procCopyq.on('close', (code) => {
+    procClip.on('close', (code) => {
         if (code === 0) {
-            console.log('[Success] Secure copy complete. Credential is now in your clipboard.');
+            console.log('[Success] Secure copy complete. Credential is now in your NATIVE clipboard.');
         } else {
-            console.error(`[Error] copyq failed with code ${code}`);
+            console.error(`[Error] Native clipper failed with code ${code}`);
         }
     });
 }

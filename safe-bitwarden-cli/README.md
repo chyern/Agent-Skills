@@ -4,8 +4,9 @@ A secure, conversational, and cross-platform bridge for interacting with your Bi
 
 ## Core Philosophy: "AI Password Blindness"
 This tool is designed with a strict zero-trust policy regarding sensitive data exposed to the AI model itself:
-1. **Piped Isolation**: The AI triggers a password fetch, but the password is piped directly from `bw` (Bitwarden CLI) into `copyq` (a cross-platform clipboard manager) using Node.js stream piping.
+1. **Piped Isolation**: The AI triggers a password fetch, but the password is piped directly from `bw` (Bitwarden CLI) into your **Native OS Clipboard** (`pbcopy`, `clip`, or `xclip`) using Node.js stream piping.
 2. **No Shell Interpolation**: All commands are executed using argument arrays (`spawn`) without a shell, eliminating command-injection vulnerabilities.
+3. **No 3rd-Party Clipper**: This version removes the dependency on CopyQ, relying entirely on built-in system tools for maximum trust and minimal footprint.
 
 **Note**: This skill focuses on **Secure Retrieval** to the clipboard. It does not perform automated pasting, software installation, or clipboard clearing.
 
@@ -13,7 +14,7 @@ This tool is designed with a strict zero-trust policy regarding sensitive data e
 
 This skill requires the following tools to be installed on your system:
 - [Bitwarden CLI (`bw`)](https://github.com/bitwarden/clients/tree/master/apps/cli)
-- [CopyQ (`copyq`)](https://hluk.github.io/CopyQ/)
+- **Native Clipboard Tools** (usually pre-installed): `pbcopy` (macOS), `clip` (Windows), or `xclip`/`wl-copy` (Linux).
 
 ## Setup
 To verify your environment manually:
