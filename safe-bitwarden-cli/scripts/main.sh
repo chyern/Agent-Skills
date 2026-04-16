@@ -79,16 +79,42 @@ handle_copy() {
         exit 1
     fi
 
-    echo "[Info] Direct kernel-pipe transmission initiated..."
+    echo "[Info] Direct kernel-pipe transmission initiated (Password)..."
     
-    # SECURITY: Using "${CLIPPER_ARGS[@]}" ensures arguments are passed 
-    # individually without shell interpolation or 'eval'.
+    # SECURITY: Direct pipe between BW and Clipper.
     bw get password "$ID" | "$CLIPPER_BIN" "${CLIPPER_ARGS[@]}"
 
     if [[ ${PIPESTATUS[0]} -eq 0 && ${PIPESTATUS[1]} -eq 0 ]]; then
-        echo "[Success] Secure copy complete. Credential is in your NATIVE clipboard."
+        echo "[Success] Secure copy complete. Password is in your NATIVE clipboard."
     else
         echo "[Error] Transmission failed."
+        exit 1
+    fi
+}
+
+# --- SECURE TOTP COPY (EVAL-FREE PIPE) ---
+handle_totp() {
+    ID="$1"
+    if [[ -z "$ID" ]]; then
+        echo "Error: Missing ID" >&2
+        exit 1
+    fi
+
+    resolve_clipper
+    if [[ -z "$CLIPPER_BIN" ]]; then
+        echo "Error: No native clipper found." >&2
+        exit 1
+    fi
+
+    echo "[Info] Direct kernel-pipe transmission initiated (TOTP)..."
+    
+    # SECURITY: Using same hardened pipe for TOTP codes.
+    bw get totp "$ID" | "$CLIPPER_BIN" "${CLIPPER_ARGS[@]}"
+
+    if [[ ${PIPESTATUS[0]} -eq 0 && ${PIPESTATUS[1]} -eq 0 ]]; then
+        echo "[Success] TOTP copy complete. 2FA code is in your NATIVE clipboard."
+    else
+        echo "[Error] TOTP retrieval failed (ensure item has TOTP configured)."
         exit 1
     fi
 }
@@ -101,5 +127,6 @@ case "$ACTION" in
     setup)  handle_setup ;;
     search) handle_search "$PARAM" ;;
     copy)   handle_copy "$PARAM" ;;
-    *)      echo "Usage: $0 {setup|search|copy} [param]"; exit 1 ;;
+    totp)   handle_totp "$PARAM" ;;
+    *)      echo "Usage: $0 {setup|search|copy|totp} [param]"; exit 1 ;;
 esac
