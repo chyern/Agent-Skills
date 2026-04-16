@@ -1,0 +1,39 @@
+{
+  "name": "safe-bitwarden-cli",
+  "version": "1.3.4",
+  "description": "A secure, conversational bridge to Bitwarden Vault using NATIVE OS clipboard.",
+  "main": "scripts/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chyern/Agent-Skills.git"
+  },
+  "homepage": "https://github.com/chyern/Agent-Skills/tree/main/safe-bitwarden-cli",
+  "keywords": [
+    "bitwarden",
+    "security",
+    "ai-agent",
+    "clipboard"
+  ],
+  "author": "chyern",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "clawhub": {
+    "requires": {
+      "bins": [
+        "bw",
+        "pbcopy",
+        "clip",
+        "xclip",
+        "wl-copy"
+      ],
+      "envs": [
+        "BW_SESSION"
+      ]
+    }
+  }
+}
