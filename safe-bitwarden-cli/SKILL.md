@@ -1,6 +1,6 @@
 ---
 name: safe-bitwarden-cli
-version: 1.3.1
+version: 1.3.3
 description: "A secure, conversational bridge to Bitwarden Vault using NATIVE OS clipboard. Zero AI password visibility / Zero 3rd-party clipper dependency."
 homepage: "https://github.com/chyern/Agent-Skills"
 repository: "https://github.com/chyern/Agent-Skills.git"
