@@ -11,12 +11,9 @@ const platform = os.platform(); // 'darwin', 'linux', 'win32'
 /**
  * COMPLIANCE SECURITY LAYER
  * Explicit whitelist of allowed binary names.
- * (Removed Keystroke Automation bins per new positioning)
+ * Reduced to the bare minimum required for operation.
  */
-const ALLOWED_BINS = [
-    'bw', 'copyq', 'brew', 
-    'winget', 'apt', 'sudo', 'node'
-];
+const ALLOWED_BINS = ['bw', 'copyq', 'node'];
 
 /**
  * PROTECTED COMMAND EXECUTION
@@ -88,16 +85,13 @@ const arg1 = process.argv[3]; // query or id
 
 async function main() {
     if (!action) {
-        console.error("Usage: main.js <setup|install|search|copy> [args]");
+        console.error("Usage: main.js <setup|search|copy> [args]");
         process.exit(1);
     }
 
     switch (action) {
         case 'setup':
             handleSetup();
-            break;
-        case 'install':
-            handleInstall();
             break;
         case 'search':
             handleSearch(arg1);
@@ -117,38 +111,13 @@ function handleSetup() {
     console.log(JSON.stringify(deps, null, 2));
 
     if (!deps.bwInstalled || !deps.copyqInstalled) {
-        console.log(`\n[ActionRequired] Missing dependencies. Run: node scripts/main.js install`);
+        console.log(`\n[ActionRequired] Missing dependencies. Please install 'bitwarden-cli' and 'copyq' on your system.`);
     } else if (deps.bwStatus === 'locked' || deps.bwStatus === 'unauthenticated') {
         console.log('\n[ActionRequired] BW is locked or unauthenticated. Please run:');
         console.log('export BW_SESSION=$(bw unlock --raw)');
     } else {
         console.log("\n[Success] Environment is ready!");
     }
-}
-
-/**
- * REAL AUTO-INSTALL LOGIC
- */
-function handleInstall() {
-    console.log(`[Install] Starting autonomous installation for ${platform}...`);
-    
-    if (platform === 'darwin') {
-        runSafe('brew', ['install', 'bitwarden-cli']);
-        runSafe('brew', ['install', '--cask', 'copyq']);
-    } else if (platform === 'win32') {
-        runSafe('winget', ['install', 'Bitwarden.CLI']);
-        runSafe('winget', ['install', 'hluk.CopyQ']);
-    } else if (platform === 'linux') {
-        const checkApt = runSafe('apt', ['--version']);
-        if (checkApt.success) {
-            runSafe('sudo', ['apt', 'update']);
-            runSafe('sudo', ['apt', 'install', '-y', 'bitwarden-cli', 'copyq']);
-        } else {
-            console.log("[Info] Please install 'bitwarden-cli' and 'copyq' via your package manager.");
-            return;
-        }
-    }
-    console.log("[Success] Installation process triggered. Run 'node scripts/main.js setup' to verify.");
 }
 
 function handleSearch(query) {
@@ -203,6 +172,7 @@ function handleCopy(id) {
     procCopyq.on('close', (code) => {
         if (code === 0) {
             console.log('[Success] Secure copy complete. Auto-clearing in 30 seconds...');
+            // Background cleanup
             const cleaner = spawn('node', [
                 '-e', 
                 'setTimeout(() => require("child_process").spawnSync("copyq", ["remove", "0"], {shell:false}), 30000)'

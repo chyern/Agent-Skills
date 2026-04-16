@@ -8,23 +8,18 @@ This tool is designed with a strict zero-trust policy regarding sensitive data e
 2. **No Shell Interpolation**: All commands are executed using argument arrays (`spawn`) without a shell, eliminating command-injection vulnerabilities.
 3. **Auto-clearing**: Passwords are given a short 30-second Time-To-Live (TTL) in the clipboard to prevent historical leaks.
 
-**Note**: This skill focuses on **Secure Retrieval** to the clipboard. It does not perform automated pasting. Users should paste the credentials manually or guide the AI to use other automation tools.
+**Note**: This skill focuses on **Secure Retrieval** to the clipboard. It does not perform automated pasting or software installation.
 
 ## Dependencies
 
-This skill checks and can automatically install:
+This skill requires the following tools to be installed on your system:
 - [Bitwarden CLI (`bw`)](https://github.com/bitwarden/clients/tree/master/apps/cli)
 - [CopyQ (`copyq`)](https://hluk.github.io/CopyQ/)
 
 ## Setup
-The AI agent can run a self-setup check. To verify your environment manually:
+To verify your environment manually:
 ```bash
 node scripts/main.js setup
-```
-
-If dependencies are missing, the agent can install them for you:
-```bash
-node scripts/main.js install
 ```
 
 To unlock the vault manually before using the agent:

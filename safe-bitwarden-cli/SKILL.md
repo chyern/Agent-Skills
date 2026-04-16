@@ -1,6 +1,6 @@
 ---
 name: safe-bitwarden-cli
-version: 1.1.0
+version: 1.1.1
 description: "A secure, conversational bridge to Bitwarden Vault using OS clipboard proxy. AI-blind account retrieval."
 homepage: "https://github.com/chyern/Agent-Skills"
 repository: "https://github.com/chyern/Agent-Skills.git"
@@ -20,19 +20,18 @@ metadata:
 
 ## Positioning & Scope
 This skill is a **Secure Clipboard Proxy**. It handles the retrieval of credentials from Bitwarden to the system clipboard without ever exposing them to the AI's context. 
-It does **NOT** perform pasting. Pasting should be handled manually by the user or via other automation tools.
 
-## Security & Trust Notice
+## Trust & Security
 - **Zero Shell Injection**: All commands use parameter arrays (`spawn`) and a strict binary whitelist.
-- **Trusted Source**: Open source repository at [github.com/chyern/Agent-Skills](https://github.com/chyern/Agent-Skills).
-- **Manual Oversight**: The `install` action triggers system package managers (brew/winget/apt). **Always ask the user for explicit permission before running installation commands.**
+- **Privacy-First**: Credentials never touch the AI's logs or memory.
+- **External Dependencies**: This skill requires `bw` and `copyq` to be pre-installed on the system. It will not attempt to install them automatically.
 
 ## Conversation Flow & Usage
 
-1. **Check/Setup Environment**:  
+1. **Check Environment**:  
    Run `node scripts/main.js setup`
    - Ensure the user has exported `BW_SESSION` in their local environment.
-   - If `bw` or `copyq` is missing, you may offer to run `node scripts/main.js install` after explicit user confirmation.
+   - If `bw` or `copyq` is missing, inform the user they need to install these tools manually (e.g., via brew, winget, or apt).
 
 2. **Search Items**:  
    Run `node scripts/main.js search "<query>"`
