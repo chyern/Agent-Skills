@@ -1,8 +1,7 @@
 ---
 name: safe-bitwarden-cli
-version: 1.0.1
+version: 1.0.2
 description: "A secure, conversational bridge to Bitwarden Vault using OS clipboard proxy. Zero AI password visibility."
-metadata:
 metadata:
   always: false
   requires:
@@ -10,6 +9,10 @@ metadata:
       - node
       - copyq
       - bw
+      - osascript
+      - xdotool
+      - wtype
+      - powershell
 ---
 # Safe Bitwarden CLI (Skill)
 
@@ -19,7 +22,7 @@ metadata:
 
 1. **Check/Setup Environment**:  
    Run `node scripts/main.js setup`
-   - If `bw` or `copyq` is missing, the script will output installation instructions or offer to auto-install (depending on OS). Ask the user for permission to proceed.
+   - If `bw` or `copyq` is missing, run `node scripts/main.js install` after obtaining user permission.
    - If `bw` is locked, advise the user to unlock it in their terminal manually: `export BW_SESSION=$(bw unlock --raw)`
 
 2. **Search Items**:  
