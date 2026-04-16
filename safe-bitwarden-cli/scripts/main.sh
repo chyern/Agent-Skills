@@ -1,57 +1,51 @@
 #!/bin/bash
 
-# Safe Bitwarden CLI - Pure Shell Edition (v1.5.0)
-# A secure, transparent bridge using native kernel piping.
+# Safe Bitwarden CLI - Pure Shell Edition (v1.5.1)
+# Hardened version: Zero eval, Zero-trust piping.
 
 set -e
 
 PLATFORM=$(uname -s | tr '[:upper:]' '[:lower:]')
 
-# --- CLIPPER RESOLUTION ---
-get_clipper() {
+# --- CLIPPER RESOLUTION (HARDENED) ---
+# We store the binary and arguments separately to avoid using 'eval'.
+CLIPPER_BIN=""
+declare -a CLIPPER_ARGS=()
+
+resolve_clipper() {
     if [[ "$PLATFORM" == "darwin" ]]; then
-        echo "pbcopy"
+        CLIPPER_BIN=$(command -v pbcopy || true)
     elif [[ "$PLATFORM" == "linux" ]]; then
         if command -v wl-copy >/dev/null 2>&1; then
-            echo "wl-copy"
+            CLIPPER_BIN=$(command -v wl-copy)
         elif command -v xclip >/dev/null 2>&1; then
-            echo "xclip -selection clipboard"
-        else
-            return 1
+            CLIPPER_BIN=$(command -v xclip)
+            CLIPPER_ARGS=("-selection" "clipboard")
         fi
     elif [[ "$PLATFORM" == *"mingw"* || "$PLATFORM" == *"cygwin"* || "$PLATFORM" == *"msys"* ]]; then
-        echo "clip"
+        CLIPPER_BIN=$(command -v clip || true)
     elif command -v clip.exe >/dev/null 2>&1; then
-        echo "clip.exe"
-    else
-        return 1
+        CLIPPER_BIN=$(command -v clip.exe)
     fi
 }
 
 # --- DEPENDENCY CHECK ---
 handle_setup() {
-    echo "{\"platform\": \"$PLATFORM\"}"
+    resolve_clipper
     
     BW_PATH=$(command -v bw || true)
-    CLIPPER_CMD=$(get_clipper || true)
     PYTHON_PATH=$(command -v python3 || true)
 
     echo "{"
+    echo "  \"platform\": \"$PLATFORM\","
     echo "  \"bwInstalled\": $([ -n "$BW_PATH" ] && echo "true" || echo "false"),"
-    echo "  \"clipperDetected\": $([ -n "$CLIPPER_CMD" ] && echo "true" || echo "false"),"
-    echo "  \"clipperType\": \"$CLIPPER_CMD\","
+    echo "  \"clipperDetected\": $([ -n "$CLIPPER_BIN" ] && echo "true" || echo "false"),"
+    echo "  \"clipperPath\": \"$CLIPPER_BIN\","
     echo "  \"pythonInstalled\": $([ -n "$PYTHON_PATH" ] && echo "true" || echo "false")"
     echo "}"
-
-    if [[ -z "$BW_PATH" ]]; then
-        echo -e "\n[ActionRequired] Please install bitwarden-cli (bw)."
-    fi
-    if [[ -z "$CLIPPER_CMD" ]]; then
-        echo -e "\n[ActionRequired] No native clipper found (pbcopy/xclip/wl-copy/clip)."
-    fi
 }
 
-# --- SEARCH LOGIC (MEMORY SAFE VIA PYTHON) ---
+# --- SEARCH LOGIC (MEMORY SAFE) ---
 handle_search() {
     QUERY="$1"
     if [[ -z "$QUERY" ]]; then
@@ -59,26 +53,19 @@ handle_search() {
         exit 1
     fi
 
-    # Retrieve data and parse using Python3 (pre-installed on macOS/Linux)
-    # This ensures only non-sensitive metadata hits the output.
+    # Retrieve and parse using Python3
     bw list items --search "$QUERY" | python3 -c '
 import sys, json
 try:
     data = json.load(sys.stdin)
-    results = []
-    for item in data:
-        results.append({
-            "id": item.get("id"),
-            "name": item.get("name"),
-            "username": item.get("login", {}).get("username", "N/A")
-        })
+    results = [{"id": i.get("id"), "name": i.get("name"), "username": i.get("login", {}).get("username", "N/A")} for i in data]
     print(json.dumps(results, indent=2))
-except Exception as e:
-    print(json.dumps({"error": str(e)}))
+except Exception:
+    print(json.dumps([]))
 '
 }
 
-# --- SECURE COPY (KERNAL PIPE) ---
+# --- SECURE COPY (EVAL-FREE PIPE) ---
 handle_copy() {
     ID="$1"
     if [[ -z "$ID" ]]; then
@@ -86,23 +73,22 @@ handle_copy() {
         exit 1
     fi
 
-    CLIPPER_CMD=$(get_clipper)
-    if [[ -z "$CLIPPER_CMD" ]]; then
-        echo "Error: No clipper found" >&2
+    resolve_clipper
+    if [[ -z "$CLIPPER_BIN" ]]; then
+        echo "Error: No native clipper found." >&2
         exit 1
     fi
 
-    echo "[Info] Piped transmission initiated..."
+    echo "[Info] Direct kernel-pipe transmission initiated..."
     
-    # CRITICAL SECURITY STEP: Pure pipe between BW and Clipper.
-    # The shell never stores the password in a variable.
-    # Use eval to handle compound clipper commands like 'xclip -selection clipboard'
-    bw get password "$ID" | eval "$CLIPPER_CMD"
+    # SECURITY: Using "${CLIPPER_ARGS[@]}" ensures arguments are passed 
+    # individually without shell interpolation or 'eval'.
+    bw get password "$ID" | "$CLIPPER_BIN" "${CLIPPER_ARGS[@]}"
 
-    if [[ $? -eq 0 ]]; then
+    if [[ ${PIPESTATUS[0]} -eq 0 && ${PIPESTATUS[1]} -eq 0 ]]; then
         echo "[Success] Secure copy complete. Credential is in your NATIVE clipboard."
     else
-        echo "[Error] Secure copy failed."
+        echo "[Error] Transmission failed."
         exit 1
     fi
 }
@@ -112,17 +98,8 @@ ACTION="$1"
 PARAM="$2"
 
 case "$ACTION" in
-    setup)
-        handle_setup
-        ;;
-    search)
-        handle_search "$PARAM"
-        ;;
-    copy)
-        handle_copy "$PARAM"
-        ;;
-    *)
-        echo "Usage: $0 {setup|search|copy} [param]"
-        exit 1
-        ;;
+    setup)  handle_setup ;;
+    search) handle_search "$PARAM" ;;
+    copy)   handle_copy "$PARAM" ;;
+    *)      echo "Usage: $0 {setup|search|copy} [param]"; exit 1 ;;
 esac

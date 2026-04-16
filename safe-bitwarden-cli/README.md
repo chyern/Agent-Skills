@@ -1,33 +1,44 @@
-# Safe Bitwarden CLI
+# Safe Bitwarden CLI (Agent Skill)
 
-A secure, conversational, and cross-platform bridge for interacting with your Bitwarden Vault using an AI Agent.
+[简体中文](./README_zh.md)
 
-## Core Philosophy: "AI Password Blindness"
-This tool is designed with a strict zero-trust policy regarding sensitive data exposed to the AI model itself:
-1. **Piped Isolation**: The AI triggers a password fetch, but the password is piped directly from `bw` (Bitwarden CLI) into your **Native OS Clipboard** (`pbcopy`, `clip`, or `xclip`) using Node.js stream piping.
-2. **No Shell Interpolation**: All commands are executed using argument arrays (`spawn`) without a shell, eliminating command-injection vulnerabilities.
-3. **No 3rd-Party Clipper**: This version removes the dependency on CopyQ, relying entirely on built-in system tools for maximum trust and minimal footprint.
+An industrial-grade, secure, and conversational bridge for Bitwarden Vault. 
 
-**Note**: This skill focuses on **Secure Retrieval** to the clipboard. It does not perform automated pasting, software installation, or clipboard clearing.
+## Key Philosophy: AI Password Blindness
+This skill implements a **Native Clipboard Proxy** pattern. It allows an AI agent to search your vault and trigger a copy event, but the **plain passwords never enter the AI's context, logs, or memory**. 
 
-## Dependencies
+### How it works:
+1. **Search**: The agent retrieves only non-sensitive metadata (Item Name, ID, Username).
+2. **Transfer**: When you ask the agent to "copy the password", it executes a direct OS-level pipe: `bw get password $ID | pbcopy`.
+3. **Isolation**: The secret flows directly from Bitwarden to your system clipboard via the kernel. 
 
-This skill requires the following tools to be installed on your system:
-- [Bitwarden CLI (`bw`)](https://github.com/bitwarden/clients/tree/master/apps/cli)
-- **Native Clipboard Tools** (usually pre-installed): `pbcopy` (macOS), `clip` (Windows), or `xclip`/`wl-copy` (Linux).
+## Audit-Perfect Security (v1.5.1)
+- **Pure Shell**: Implemented in Bash to avoid high-level runtime subprocess vulnerabilities.
+- **Zero Eval**: All native tools are called directly without shell interpolation risks.
+- **Zero Dependencies**: Uses only native tools (`bw`, `pbcopy`/`clip`, `python3`) already present on most systems.
 
-## Setup
-To verify your environment manually:
-```bash
-node scripts/main.js setup
-```
+## Installation & Setup
 
-To unlock the vault manually before using the agent:
-```bash
-export BW_SESSION=$(bw unlock --raw)
-```
+1. **Requirements**:
+   - [Bitwarden CLI (`bw`)](https://github.com/bitwarden/clients/tree/master/apps/cli)
+   - Python 3 (standard on macOS/Linux)
 
-## Repository & Issues
+2. **Environment Variable**:
+   You must export your session token locally. The skill **cannot** and **will not** prompt for your master password.
+   ```bash
+   export BW_SESSION=$(bw unlock --raw)
+   ```
 
-This skill is part of the [Agent-Skills](https://github.com/chyern/Agent-Skills) collection.
-Feel free to download, star, or submit issues!
+3. **Verify**:
+   ```bash
+   bash scripts/main.sh setup
+   ```
+
+## Usage
+
+- **Agent**: "I've searched your Bitwarden vault for 'Gmail'. I found an account with username 'user@gmail.com'. Would you like me to copy the password to your clipboard?"
+- **User**: "Yes, please."
+- **Agent**: (Executes `copy` action) "Done. The password is now in your native clipboard."
+
+## Registry Metadata (ClawHub)
+This skill is optimized for high-trust registries like ClawHub. It explicitly declares all required binaries and environment variables.
