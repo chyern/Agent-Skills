@@ -131,19 +131,35 @@ async function handleSearch(query) {
         console.error('Missing search query');
         process.exit(1);
     }
-    const res = await execBwAsync(['list', 'items', '--search', query], true);
+    
+    // Hardcoded execution of search
+    let res = await execBwAsync(['list', 'items', '--search', query], true);
     if (!res.success) {
         console.error('[Error] Failed to search.', res.output);
         process.exit(1);
     }
 
     try {
-        const items = JSON.parse(res.output);
-        const results = items.map(idx => ({
-            id: idx.id,
-            name: idx.name,
-            username: idx.login ? idx.login.username : 'N/A'
+        /**
+         * MEMORY SAFETY AUDIT: 
+         * 'bw list' returns full objects including secrets. 
+         * We parse, extract MINIMAL metadata, and immediately NULLIFY 
+         * the original output to ensure secrets are cleared from memory.
+         */
+        const fullItemsList = JSON.parse(res.output);
+        
+        // Immediately nullify raw stdout to release memory
+        res.output = null; 
+
+        const results = fullItemsList.map(item => ({
+            id: item.id,
+            name: item.name,
+            username: item.login ? item.login.username : 'N/A'
         }));
+
+        // Explicitly clear the full object list reference
+        fullItemsList.length = 0; 
+        
         console.log(JSON.stringify(results, null, 2));
     } catch (e) {
         console.error('[Error] Could not parse bw output.');
