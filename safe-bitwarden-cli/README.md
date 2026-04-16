@@ -6,9 +6,8 @@ A secure, conversational, and cross-platform bridge for interacting with your Bi
 This tool is designed with a strict zero-trust policy regarding sensitive data exposed to the AI model itself:
 1. **Piped Isolation**: The AI triggers a password fetch, but the password is piped directly from `bw` (Bitwarden CLI) into `copyq` (a cross-platform clipboard manager) using Node.js stream piping.
 2. **No Shell Interpolation**: All commands are executed using argument arrays (`spawn`) without a shell, eliminating command-injection vulnerabilities.
-3. **Auto-clearing**: Passwords are given a short 30-second Time-To-Live (TTL) in the clipboard to prevent historical leaks.
 
-**Note**: This skill focuses on **Secure Retrieval** to the clipboard. It does not perform automated pasting or software installation.
+**Note**: This skill focuses on **Secure Retrieval** to the clipboard. It does not perform automated pasting, software installation, or clipboard clearing.
 
 ## Dependencies
 

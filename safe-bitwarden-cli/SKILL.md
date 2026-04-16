@@ -1,6 +1,6 @@
 ---
 name: safe-bitwarden-cli
-version: 1.1.1
+version: 1.2.0
 description: "A secure, conversational bridge to Bitwarden Vault using OS clipboard proxy. AI-blind account retrieval."
 homepage: "https://github.com/chyern/Agent-Skills"
 repository: "https://github.com/chyern/Agent-Skills.git"
@@ -24,14 +24,15 @@ This skill is a **Secure Clipboard Proxy**. It handles the retrieval of credenti
 ## Trust & Security
 - **Zero Shell Injection**: All commands use parameter arrays (`spawn`) and a strict binary whitelist.
 - **Privacy-First**: Credentials never touch the AI's logs or memory.
-- **External Dependencies**: This skill requires `bw` and `copyq` to be pre-installed on the system. It will not attempt to install them automatically.
+- **External Dependencies**: This skill requires `bw` and `copyq` to be pre-installed on the system.
+- **Clipboard Management**: This skill does NOT perform automatic clearing of the clipboard. Users are responsible for managing their clipboard history and clearing secrets after use.
 
 ## Conversation Flow & Usage
 
 1. **Check Environment**:  
    Run `node scripts/main.js setup`
    - Ensure the user has exported `BW_SESSION` in their local environment.
-   - If `bw` or `copyq` is missing, inform the user they need to install these tools manually (e.g., via brew, winget, or apt).
+   - If `bw` or `copyq` is missing, inform the user they need to install these tools manually.
 
 2. **Search Items**:  
    Run `node scripts/main.js search "<query>"`
@@ -40,4 +41,4 @@ This skill is a **Secure Clipboard Proxy**. It handles the retrieval of credenti
 3. **Secure Copy**:  
    Once the user selects an ID, run `node scripts/main.js copy "<id>"`
    - The script securely pipes the secret to `copyq` using Node.js streams.
-   - **Important**: Inform the user that the credential is now in their clipboard and they have ~30 seconds to paste it before it is cleared.
+   - Inform the user that the credential is now in their clipboard.

@@ -10,8 +10,7 @@ const platform = os.platform(); // 'darwin', 'linux', 'win32'
 
 /**
  * COMPLIANCE SECURITY LAYER
- * To satisfy strict static analysis (e.g. ClawHub Audit), 
- * we use hardcoded command strings in dedicated wrappers.
+ * Explicit hardcoded commands to satisfy static analysis.
  */
 
 function execBw(args, returnStdout = false) {
@@ -118,7 +117,6 @@ function handleSearch(query) {
         process.exit(1);
     }
     
-    // Explicitly using the bw wrapper with hardcoded string
     const res = execBw(['list', 'items', '--search', query], true);
     if (!res.success) {
         console.error('[Error] Failed to search. Please ensure bw is unlocked.', res.output);
@@ -140,6 +138,7 @@ function handleSearch(query) {
 
 /**
  * SAFE PIPED COPY
+ * (TTL auto-clear removed per User request and Registry Audit feedback)
  */
 function handleCopy(id) {
     if (!id) {
@@ -149,7 +148,6 @@ function handleCopy(id) {
 
     console.log(`[Info] Initiating direct pipe transmission for ID: ${id}`);
     
-    // Hardcoded binary names in spawn satisfy static analyzers
     const procBw = spawn('bw', ['get', 'password', id], { shell: false });
     const procCopyq = spawn('copyq', ['copy', '-'], { shell: false });
 
@@ -165,16 +163,7 @@ function handleCopy(id) {
 
     procCopyq.on('close', (code) => {
         if (code === 0) {
-            console.log('[Success] Secure copy complete. Auto-clearing in 30 seconds...');
-            // Internal cleanup also using hardcoded 'node' and 'copyq' strings
-            const cleaner = spawn('node', [
-                '-e', 
-                'require("child_process").spawnSync("copyq", ["remove", "0"], {shell:false})'
-            ], {
-                detached: true,
-                stdio: 'ignore'
-            });
-            cleaner.unref();
+            console.log('[Success] Secure copy complete. Credential is now in your clipboard.');
         } else {
             console.error(`[Error] copyq failed with code ${code}`);
         }
