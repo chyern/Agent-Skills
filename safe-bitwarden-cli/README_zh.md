@@ -4,17 +4,17 @@
 
 ## 核心设计：AI 密码盲区 (AI Password Blindness)
 我们采用了以下机制来保障极致隐私与安全：
-1. **管道隔离传输**：AI 发起获取密码指令后，密码会直接通过 Node.js 的流管道（Stream Pipe）从 `bw` 传输至 `copyq` 剪切板管理工具中。
-2. **无 Shell 注入风险**：所有底层命令均通过 `spawn` 参数数组执行，不经过 Shell 解析，从根源上杜绝了 Shell 注入漏洞。
+1. **管道隔离传输**：AI 发起获取密码指令后，密码会直接通过 Node.js 的流管道（Stream Pipe）从 `bw` 传输至 `copyq` 剪切板管理工具中。密码字符串永远不会通过 stdout 泄露。
+2. **无 Shell 注入风险**：所有底层命令均通过 `spawn` 参数数组执行，不经过 Shell 解析，从根源上杜绝了注入漏洞。
 3. **阅后即焚**：在拷贝发生后，剪切板会有一个 30秒 的倒计时。倒计时结束时，密码会自动从剪切板历史中强制抹除。
-4. **自动化跨平台注入**：AI 可以在获得授权后，自动触发系统级粘贴动作（`Cmd+V` / `Ctrl+V`），将密码安全注入您选定的输入框。
+
+**说明**：本 Skill 仅负责 **安全提取到剪切板**。为了保障系统安全，它不包含自动粘贴逻辑。提取后，您可以手动粘贴或通过其他自动化工具完成输入。
 
 ## 依赖关系
 
 本 Skill 可以自动探测并为您安装：
 - [Bitwarden 官方命令行工具 (`bw`)](https://github.com/bitwarden/clients/tree/master/apps/cli)
 - [开源剪切板管理器 (`CopyQ`)](https://hluk.github.io/CopyQ/)
-- *系统级驱动工具*：`osascript` (macOS), `xdotool` (X11), `wtype` (Wayland), 或 `powershell` (Windows)。
 
 ## 初始化指引
 AI 助手可以为您执行自检和自动安装。

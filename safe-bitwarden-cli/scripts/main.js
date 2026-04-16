@@ -7,23 +7,19 @@ const os = require('os');
  * ENVIRONMENT DETECTOR
  */
 const platform = os.platform(); // 'darwin', 'linux', 'win32'
-const isLinuxX11 = platform === 'linux' && process.env.XDG_SESSION_TYPE === 'x11';
-const isLinuxWayland = platform === 'linux' && process.env.XDG_SESSION_TYPE === 'wayland';
 
 /**
  * COMPLIANCE SECURITY LAYER
  * Explicit whitelist of allowed binary names.
+ * (Removed Keystroke Automation bins per new positioning)
  */
 const ALLOWED_BINS = [
-    'bw', 'copyq', 'brew', 'osascript', 
-    'xdotool', 'wtype', 'powershell', 
+    'bw', 'copyq', 'brew', 
     'winget', 'apt', 'sudo', 'node'
 ];
 
 /**
  * PROTECTED COMMAND EXECUTION
- * 1. Checks against strict whitelist.
- * 2. Uses parameter arrays only (no shell).
  */
 function runSafe(cmd, args = [], returnStdout = false) {
     if (!ALLOWED_BINS.includes(cmd)) {
@@ -34,7 +30,7 @@ function runSafe(cmd, args = [], returnStdout = false) {
         const res = spawnSync(cmd, args, {
             stdio: returnStdout ? ['ignore', 'pipe', 'pipe'] : 'ignore',
             encoding: 'utf8',
-            shell: false // Explicitly disable shell
+            shell: false
         });
         if (res.status === 0) {
             return { success: true, output: res.stdout ? res.stdout.trim() : null };
@@ -49,7 +45,6 @@ function runSafe(cmd, args = [], returnStdout = false) {
 
 /**
  * HARDCODED COMMAND WRAPPERS
- * Static strings are used to satisfy strict scanners that flag variable command names.
  */
 const bw = {
     version: () => runSafe('bw', ['--version'], true),
@@ -93,7 +88,7 @@ const arg1 = process.argv[3]; // query or id
 
 async function main() {
     if (!action) {
-        console.error("Usage: main.js <setup|install|search|copy|paste> [args]");
+        console.error("Usage: main.js <setup|install|search|copy> [args]");
         process.exit(1);
     }
 
@@ -109,9 +104,6 @@ async function main() {
             break;
         case 'copy':
             handleCopy(arg1);
-            break;
-        case 'paste':
-            handlePaste();
             break;
         default:
             console.error(`Unknown action: ${action}`);
@@ -195,7 +187,6 @@ function handleCopy(id) {
 
     console.log(`[Info] Initiating direct pipe transmission for ID: ${id}`);
     
-    // Explicit binary names used for better static analysis tracking
     const procBw = spawn('bw', ['get', 'password', id], { shell: false });
     const procCopyq = spawn('copyq', ['copy', '-'], { shell: false });
 
@@ -212,7 +203,6 @@ function handleCopy(id) {
     procCopyq.on('close', (code) => {
         if (code === 0) {
             console.log('[Success] Secure copy complete. Auto-clearing in 30 seconds...');
-            // Background cleanup
             const cleaner = spawn('node', [
                 '-e', 
                 'setTimeout(() => require("child_process").spawnSync("copyq", ["remove", "0"], {shell:false}), 30000)'
@@ -225,30 +215,6 @@ function handleCopy(id) {
             console.error(`[Error] copyq failed with code ${code}`);
         }
     });
-}
-
-function handlePaste() {
-    console.log(`[Info] Simulating Paste on ${platform}...`);
-    
-    let res;
-    if (platform === 'darwin') {
-        res = runSafe('osascript', ['-e', 'tell application "System Events" to keystroke "v" using command down']);
-    } else if (isLinuxX11) {
-        res = runSafe('xdotool', ['key', 'ctrl+v']);
-    } else if (isLinuxWayland) {
-        res = runSafe('wtype', ['-k', 'v']);
-    } else if (platform === 'win32') {
-        res = runSafe('powershell', ['-c', "$wshell = New-Object -ComObject WScript.Shell; $wshell.SendKeys('^v')"]);
-    } else {
-        console.error('[Error] Platform not supported for auto-paste.');
-        process.exit(1);
-    }
-
-    if (res && res.success) {
-        console.log('[Success] Keystroke injection successful.');
-    } else {
-        console.error('[Error] Paste failed. Ensure local permissions are granted.', res ? res.output : '');
-    }
 }
 
 main();
