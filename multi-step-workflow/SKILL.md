@@ -1,6 +1,6 @@
 ---
 name: multi-step-workflow
-version: 4.4.3
+version: 4.4.4
 description: "Professional SOP with Machine-Gated Planning, Native-CLI Config, and Audit-Hardened Private Sandbox Storage."
 metadata:
   always: false
@@ -10,7 +10,7 @@ metadata:
       - openclaw
   clawdbot:
     name: multi-step-workflow
-    version: 4.4.3
+    version: 4.4.4
 ---
 # Standard Task SOP (High-Trust Edition)
 

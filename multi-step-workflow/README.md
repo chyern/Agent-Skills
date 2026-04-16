@@ -50,6 +50,11 @@ Lightweight task tracking with **Machine-Gated Planning**, **Autonomous Executio
 - `approve.js`: Machine-visible gate signal.
 - `context-snapshot.js`: High-fidelity state persistence.
 
+## Repository & Issues
+
+This skill is part of the [Agent-Skills](https://github.com/chyern/Agent-Skills) collection.
+Feel free to download, star, or submit issues!
+
 ## License
 
 MIT

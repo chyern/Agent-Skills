@@ -21,3 +21,8 @@ To unlock the vault manually before using the agent:
 ```bash
 export BW_SESSION=$(bw unlock --raw)
 ```
+
+## Repository & Issues
+
+This skill is part of the [Agent-Skills](https://github.com/chyern/Agent-Skills) collection.
+Feel free to download, star, or submit issues!

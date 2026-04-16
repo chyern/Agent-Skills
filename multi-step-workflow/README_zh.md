@@ -52,6 +52,11 @@
 - `approve.js`：审批标记（0600 权限）。
 - `context-snapshot.js`：高忠实度状态快照。
 
+## 仓库与反馈
+
+该 Skill 是 [Agent-Skills](https://github.com/chyern/Agent-Skills) 系列的一部分。
+欢迎下载、Star 或通过 Issue 提交反馈！
+
 ## 许可证
 
 MIT
