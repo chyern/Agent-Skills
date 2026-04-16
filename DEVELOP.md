@@ -13,15 +13,6 @@
 
 ## Pre-Publish Checklist
 
-```bash
-# 1. Privacy check
-grep -rEl "<personal-info>" scripts/ || echo "Clean"
-
-# 2. Verify scripts
-node scripts/task-tracker.js new "test" "a|b" && node scripts/task-tracker.js list
-node scripts/context-snapshot.js save "test" "findings" "pending"
-node scripts/context-snapshot.js load
-node scripts/context-snapshot.js clear
-```
+1. **Privacy**
 
 **Rule: Never publish without verification and user instruction.**
